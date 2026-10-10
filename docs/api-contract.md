@@ -35,6 +35,8 @@ Any other value is rejected with `invalid_input` and the offending field name.
 
 ## 3. Routes
 
+**Request validation rules:** The shared validator requires `ev_kw`, `pv_kwp`, `day_type`, and `load_level`. `bess` is optional (default `off` from scenarios config); `bess_override` is optional (default null). EV and PV selections must be exact integers, excluding booleans and floats; day, load level and BESS choices must be exact strings from config. An override must contain exactly `power_kw` and `energy_kwh`, each finite and positive, with integer or float type excluding booleans; no upper bounds yet. Unknown keys are rejected. Failures use `invalid_input` with the offending `field` named (nested override fields use `bess_override.<key>`; a non-object payload uses `payload`). Route-specific request rules below still apply.
+
 Common request body for the POST routes (the "scenario"):
 
 ```json
@@ -158,6 +160,8 @@ All seven top-level fields are required: `meta`, `series`, `summary`, `alerts`, 
 
 ### 4.2 series (every array has exactly 96 entries)
 
+M3b reports the second daily pass; series temperatures are at the end of each step, labelled by that step's start time. All output numbers are rounded to four decimals; summaries and alerts are derived from the rounded series.
+
 | Field | Type | Unit | Nullable | Notes |
 |---|---|---|---|---|
 | `time` | list of string | `"HH:MM"` | no | |
@@ -195,6 +199,8 @@ Summary timestamps select the first occurrence when extrema tie.
 
 ### 4.4 alerts
 
+Threshold crossings use strict comparisons; consecutive-step events never wrap across midnight. Hot-spot warning applies above its warning limit up to and including the critical limit; critical applies strictly above the critical limit, so crossings split events.
+
 List (may be empty). Each item:
 
 | Field | Type | Nullable | Allowed values / unit |
@@ -210,9 +216,11 @@ Alert count = length of the list. `start` and `end` are inclusive first and last
 
 ### 4.5 verdict
 
+`violations_found` means warning or critical violations exist and no BESS analysis has been run; info alerts alone leave the M3b verdict `safe`.
+
 | Field | Type | Nullable | Allowed values |
 |---|---|---|---|
-| `status` | string | no | `safe`, `safe_with_bess`, `upgrade_recommended` |
+| `status` | string | no | `safe`, `violations_found`, `safe_with_bess`, `upgrade_recommended` |
 | `message` | string | no | One human-readable line |
 
 ### 4.6 bess (nullable object)

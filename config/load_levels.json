@@ -4,8 +4,20 @@
     "schema_version": 1
   },
   "parameters": {
-    "moderate_base_peak_pct_of_rating": {"value": null, "unit": "%", "assumption": "TBD"},
-    "heavy_base_peak_pct_of_rating": {"value": null, "unit": "%", "assumption": "TBD"},
-    "critical_base_peak_pct_of_rating": {"value": null, "unit": "%", "assumption": "TBD"}
+    "moderate_base_peak_pct_of_rating": {
+      "value": 55,
+      "unit": "percent of rated_kva, applied to real power in kW",
+      "assumption": "assumption: demo calibration of existing transformer loading before the new EV hub; replace with real feeder data"
+    },
+    "heavy_base_peak_pct_of_rating": {
+      "value": 70,
+      "unit": "percent of rated_kva, applied to real power in kW",
+      "assumption": "assumption: demo calibration of existing transformer loading before the new EV hub; replace with real feeder data"
+    },
+    "critical_base_peak_pct_of_rating": {
+      "value": 85,
+      "unit": "percent of rated_kva, applied to real power in kW",
+      "assumption": "assumption: demo calibration of existing transformer loading before the new EV hub; replace with real feeder data"
+    }
   }
 }

@@ -16,7 +16,7 @@ CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
 
 def _all_parameters():
     """Yield (file_name, parameter_name, parameter_object) for every config entry."""
-    for path in sorted(CONFIG_DIR.glob("*.json")):
+    for path in sorted(CONFIG_DIR.rglob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
         assert isinstance(data.get("parameters"), dict), f"{path.name}: parameters must be an object"
         for name, param in data["parameters"].items():
@@ -24,7 +24,7 @@ def _all_parameters():
 
 
 def test_config_files_exist():
-    assert list(CONFIG_DIR.glob("*.json")), f"no JSON files found in {CONFIG_DIR}"
+    assert list(CONFIG_DIR.rglob("*.json")), f"no JSON files found in {CONFIG_DIR}"
 
 
 def test_every_parameter_has_value_unit_and_note():

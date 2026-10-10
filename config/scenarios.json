@@ -13,6 +13,8 @@
     "default_pv_kwp": {"value": 30, "unit": "kWp", "assumption": "Demo choice, not an engineering recommendation. Editable."},
     "default_day_type": {"value": "summer_weekday", "unit": "enum", "assumption": "Demo choice, not an engineering recommendation. Editable."},
     "default_load_level": {"value": "heavy", "unit": "enum", "assumption": "Demo choice, not an engineering recommendation. Editable."},
-    "default_bess": {"value": "off", "unit": "enum", "assumption": "Demo choice: first run shows the unmitigated case. Editable."}
+    "default_bess": {"value": "off", "unit": "enum", "assumption": "Demo choice: first run shows the unmitigated case. Editable."},
+    "step_minutes": {"value": 15, "unit": "min", "source": "PRD v2.0 section 7"},
+    "steps_per_day": {"value": 96, "unit": "count", "source": "PRD v2.0 section 7"}
   }
 }

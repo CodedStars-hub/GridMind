@@ -48,7 +48,13 @@ Current is recomputed using the final voltage. Loading is 100 times secondary cu
 M2 holds base load at 0.95 lagging, EV at 0.98 lagging, PV at 1.0 and battery at 1.0. These are typical-value, fixed design assumptions rather than measured values; verify for the installation. Only unity-power-factor PV is supported in the MVP. Base and EV reactive power is active power multiplied by the tangent of the arccosine of their power factor; PV and battery add no reactive power.
 
 ## Load profiles and calibration approach
-Will describe profile shapes and the rule that calibration uses plausible ranges, not target outcomes. Filled in M3.
+M3a uses normalized base, EV and PV shapes, sampled every 15 minutes for 96 steps. The base and EV shapes peak at one. Base peaks are 55, 70 and 85 percent of rated kVA for moderate, heavy and critical, applied to real power in kW: for the 250 kVA unit these are 137.5, 175 and 212.5 kW. This is illustrative demo calibration of existing loading before the new EV hub, not measured feeder loading or a current-based loading result.
+
+The EV profile is a stress-test case with full hub output during the evening window, including 18:00 through 21:00; the PRD describes a 6-10 PM peak. PV shapes include temperature, soiling and inverter derating, with maxima 0.80 in summer/weekend and 0.65 in winter. Their daylight span is roughly 7 AM to 6 PM, wider than the PRD 9 AM to 5 PM example.
+
+Ambient is an illustrative Delhi day: summer 30-43 C within the PRD 30-45 C range, winter 7-21 C. Weekend uses summer PV and weather; weekday EV shapes are identical. All data are illustrative and replaceable by real feeder, charging, solar and weather measurements; calibration must use plausible inputs rather than target outcomes.
+
+Regenerate the four profile JSON files with `python scripts/generate_profiles.py`. Only that standalone authoring tool holds the supplied anchor tables. It linearly interpolates the wrapping 0-to-24-hour anchors at quarter-hour samples, rounds to four decimals, and writes deterministic JSON; the engine reads only the JSON.
 
 ## Aging model
 M1 computes aging acceleration as the exponential of the aging constant divided by reference kelvin, minus that constant divided by hot-spot Celsius plus 273. Config supplies the 15000 K constant and 383 K reference; the requested Celsius-to-kelvin convention uses 273. At the 110 C reference, the factor is one.
@@ -64,3 +70,15 @@ Will document the upgrade and battery cost assumptions and their editable ranges
 ## Known limitations
 Will list what the model does not cover (single transformer, single phase equivalent, mock OpenADR). Filled in M14.
 Engine code must stay compatible with Python 3.12. Do not use syntax or standard-library features newer than 3.12.
+
+## Simulation procedure
+
+M3b builds load series and parameters from loaded config. It solves the first step's power flow and initializes relative thermal rises at that current's steady state. It then carries thermal state through two full daily passes and reports only the second pass; the first pass warms up the state toward the repeating daily cycle. A separate three-pass test checks the residual drift rather than assuming exact periodic convergence.
+
+Each step solves connection voltage and secondary current, uses current in per unit as thermal load K, advances relative rises with the exact thermal update, and computes aging from absolute hot-spot temperature. Load and ambient stay constant during the step. Reported temperatures are end-of-step values labelled by that step's start time.
+
+Compute in full precision, round series to four decimals, then derive summaries and alerts from the rounded series. Summary extrema choose the first occurrence on ties. Daily equivalent aging is recomputed from rounded hot-spot temperatures; life is derived from that unrounded total before rounding both summary values.
+
+Alert thresholds are strict: voltage below the minimum or above the maximum is warning; hot-spot above the warning threshold up to and including the critical threshold is warning; hot-spot above the critical threshold is critical; loading above its information threshold is info. Warning and critical hot-spot step sets are disjoint. Consecutive steps merge into inclusive events without crossing midnight, sorted by start step then type. Low-voltage events use their minimum voltage as peak; other events use their maximum.
+
+Any warning or critical alert gives `violations_found`, meaning violations exist and no BESS analysis has been run. Otherwise the verdict is `safe`; info alerts alone do not change it. BESS is not simulated yet: automatic mode and overrides raise NotImplementedError until M8, and all BESS and cost result fields are null.
