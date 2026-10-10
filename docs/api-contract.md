@@ -13,7 +13,7 @@ Single source of truth for request and response shapes. Engine, Lambda and front
 | Voltage | per unit (p.u.) |
 | Temperature | degrees Celsius (°C) |
 | Power | kW |
-| Loading | percent of rated kVA (%) |
+| Loading | percent of rated CURRENT (equal to kVA loading at rated voltage) |
 | Money | INR, integers |
 | Numbers | Never `NaN` or `Infinity` anywhere in any response |
 | Nullable | A field marked "nullable" is present but may be `null`. No field is ever omitted |
@@ -167,7 +167,7 @@ All seven top-level fields are required: `meta`, `series`, `summary`, `alerts`, 
 | `pv_kw` | list of number | kW | no | PV generation (positive number) |
 | `net_kw` | list of number | kW | no | Net load at the transformer after any BESS |
 | `voltage_pu` | list of number | p.u. | no | |
-| `loading_pct` | list of number | % | no | |
+| `loading_pct` | list of number | % | no | Percent of rated CURRENT: 100 times per-unit secondary current magnitude; equal to kVA loading at rated voltage |
 | `top_oil_c` | list of number | °C | no | |
 | `hotspot_c` | list of number | °C | no | |
 | `aging_factor` | list of number | none | no | |

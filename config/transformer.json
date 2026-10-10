@@ -25,19 +25,19 @@
       "source": "PRD v2.0 section 7 (HV source at 1.0 p.u., fixed tap)"
     },
     "impedance_voltage_pct": {
-      "value": null,
-      "unit": "%",
-      "assumption": "TBD"
+      "value": 4.5,
+      "unit": "percent",
+      "assumption": "assumption: typical short-circuit impedance of a 250 kVA distribution transformer; verify against nameplate"
     },
     "no_load_loss_w": {
-      "value": null,
+      "value": 600,
       "unit": "W",
-      "assumption": "TBD"
+      "assumption": "assumption: typical no-load loss; chosen so load_loss_w / no_load_loss_w equals loss_ratio = 5.0 used by the thermal model; verify against nameplate"
     },
     "load_loss_w": {
-      "value": null,
+      "value": 3000,
       "unit": "W",
-      "assumption": "TBD"
+      "assumption": "assumption: typical load loss at rated current for a 250 kVA unit; verify against nameplate"
     },
     "rated_top_oil_rise_c": {
       "value": 55,
@@ -75,14 +75,14 @@
       "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "feeder_resistance_pu": {
-      "value": null,
-      "unit": "p.u.",
-      "assumption": "TBD"
+      "value": 0.024,
+      "unit": "p.u. on a 250 kVA, 415 V base",
+      "assumption": "assumption: roughly 100 m of 185 mm2 aluminium four-core LV cable, typical per-km values; replace with real feeder data"
     },
     "feeder_reactance_pu": {
-      "value": null,
-      "unit": "p.u.",
-      "assumption": "TBD"
+      "value": 0.01,
+      "unit": "p.u. on a 250 kVA, 415 V base",
+      "assumption": "assumption: roughly 100 m of 185 mm2 aluminium four-core LV cable, typical per-km values; replace with real feeder data"
     },
     "power_factor_base": {
       "value": 0.95,
@@ -106,6 +106,16 @@
       "value": 30,
       "unit": "degC",
       "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    "powerflow_tolerance_pu": {
+      "value": 1e-09,
+      "unit": "p.u.",
+      "assumption": "assumption: numerical solver setting for the complex voltage convergence tolerance"
+    },
+    "powerflow_max_iterations": {
+      "value": 50,
+      "unit": "count",
+      "assumption": "assumption: numerical solver setting limiting fixed-point iterations"
     }
   }
 }

@@ -3,7 +3,7 @@
 > Planning-grade model of one transformer. Values marked TBD are not final.
 
 ## Topology
-Will describe the single-branch radial layout: HV source, transformer, one lumped LV feeder, one connection point. Filled in M2.
+M2 uses one branch: ideal HV source at the configured fixed-tap voltage, then transformer series impedance, then one lumped LV feeder impedance, then ONE connection point for base load, the EV hub, solar and later battery. This balanced single-phase equivalent has no shunt branches; no-load loss does not enter its power-flow demand.
 
 ## Thermal model parameters
 M1 uses these typical-value assumptions, not values from a specific nameplate:
@@ -26,10 +26,26 @@ Ultimate top-oil rise is the rated rise multiplied by the ratio of load-squared 
 State stores only relative rises. Absolute top-oil is ambient plus oil rise; absolute hot-spot adds the winding rise. Time constants remain constant, and temperature-dependent oil viscosity is not modelled.
 
 ## Feeder impedance and voltage model
-Will explain the feeder R and X choice and the voltage solution method. Filled in M2.
+The per-unit base is the configured 250 kVA rating and 415 V LV voltage. Active kW and reactive kvar divide by rated kVA to give per-unit power. Transformer resistance is rated load loss divided by rated power in VA; impedance magnitude is short-circuit impedance percent divided by 100. Reactance is the square root of impedance magnitude squared minus resistance squared. An impedance smaller than resistance is invalid.
+
+| Parameter | Value | Unit | Basis |
+|---|---|---|---|
+| impedance_voltage_pct | 4.5 | percent | Typical-value assumption; verify against nameplate |
+| load_loss_w | 3000 | W | Typical-value assumption at rated current; verify against nameplate |
+| no_load_loss_w | 600 | W | Typical-value assumption; load loss divided by no-load loss equals thermal loss_ratio 5.0 |
+| feeder_resistance_pu | 0.024 | p.u. on a 250 kVA, 415 V base | Typical-value cable assumption |
+| feeder_reactance_pu | 0.010 | p.u. on a 250 kVA, 415 V base | Typical-value cable assumption |
+| powerflow_tolerance_pu | 1e-9 | p.u. | Numerical solver setting |
+| powerflow_max_iterations | 50 | count | Numerical solver setting |
+
+The feeder values assume roughly 100 m of 185 mm2 aluminium four-core LV cable using typical per-km values; replace with real feeder data. The supplied losses and impedance are typical-value assumptions, not a specific nameplate.
+
+All connection-point powers are constant-power inputs. Active demand is base plus EV minus solar minus battery discharge; charging adds demand. Reactive demand comes from base and EV power factors. Starting at source voltage, fixed-point iteration calculates current as the conjugate of complex power divided by connection voltage, then subtracts total series impedance times current from source voltage. Convergence requires the voltage-change magnitude below the configured tolerance. Non-convergence, non-finite intermediates, or voltage below the named 0.1 p.u. numerical collapse guard raise a convergence failure.
+
+Current is recomputed using the final voltage. Loading is 100 times secondary current magnitude in per unit: percent of rated CURRENT, equal to kVA loading at rated voltage. At a depressed voltage, constant apparent power draws higher current, so loading is not simply net kW divided by rated kVA.
 
 ## Power factors
-Will document the fixed power factors for base load, EV and PV. Filled in M2.
+M2 holds base load at 0.95 lagging, EV at 0.98 lagging, PV at 1.0 and battery at 1.0. These are typical-value, fixed design assumptions rather than measured values; verify for the installation. Only unity-power-factor PV is supported in the MVP. Base and EV reactive power is active power multiplied by the tangent of the arccosine of their power factor; PV and battery add no reactive power.
 
 ## Load profiles and calibration approach
 Will describe profile shapes and the rule that calibration uses plausible ranges, not target outcomes. Filled in M3.
