@@ -12,6 +12,7 @@
     "aging_reference_hotspot_c": {"value": 110, "unit": "degC", "source": "IEEE C57.91 as quoted in PRD v2.0 section 7"},
     "aging_constant": {"value": 15000, "unit": "K", "source": "IEEE C57.91 as quoted in PRD v2.0 section 7"},
     "aging_reference_kelvin": {"value": 383, "unit": "K", "source": "IEEE C57.91 as quoted in PRD v2.0 section 7"},
-    "normal_insulation_life_hours": {"value": 180000, "unit": "h", "source": "PRD v2.0 section 7 (normal life at reference)"}
+    "normal_insulation_life_hours": {"value": 180000, "unit": "h", "source": "PRD v2.0 section 7 (normal life at reference)"},
+    "insulation_life_cap_years": {"value": 100, "unit": "years", "assumption": "display cap so very low aging does not produce unbounded life; editable"}
   }
 }

@@ -189,7 +189,7 @@ The UI builds the EV/solar timeline strip from `series.ev_kw` and `series.pv_kw`
 | `peak_loading_time` | string `"HH:MM"` | | no |
 | `peak_aging_factor` | number | none | no |
 | `daily_equivalent_aging_hours` | number | h per day | no |
-| `insulation_life_years` | number | years | no (never null; how very large values are capped is TBD, decided in M1) |
+| `insulation_life_years` | number | years | no (never null; capped at `insulation_life_cap_years` from limits config) |
 
 Summary timestamps select the first occurrence when extrema tie.
 

@@ -40,39 +40,39 @@
       "assumption": "TBD"
     },
     "rated_top_oil_rise_c": {
-      "value": null,
+      "value": 55,
       "unit": "degC",
-      "assumption": "TBD"
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "rated_hotspot_rise_over_top_oil_c": {
-      "value": null,
+      "value": 25,
       "unit": "degC",
-      "assumption": "TBD"
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "loss_ratio": {
-      "value": null,
+      "value": 5.0,
       "unit": "ratio",
-      "assumption": "TBD"
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "oil_exponent": {
-      "value": null,
+      "value": 0.8,
       "unit": "none",
-      "assumption": "TBD"
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "winding_exponent": {
-      "value": null,
+      "value": 0.8,
       "unit": "none",
-      "assumption": "TBD"
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "oil_time_constant_min": {
-      "value": null,
+      "value": 180,
       "unit": "min",
-      "assumption": "TBD"
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "winding_time_constant_min": {
-      "value": null,
+      "value": 5,
       "unit": "min",
-      "assumption": "TBD"
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     },
     "feeder_resistance_pu": {
       "value": null,
@@ -101,6 +101,11 @@
       "unit": "none",
       "source": "PRD v2.0 section 7 (PV unity)",
       "assumption": "Fixed design choice, not a measured value."
+    },
+    "reference_ambient_c": {
+      "value": 30,
+      "unit": "degC",
+      "assumption": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
     }
   }
 }
