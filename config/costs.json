@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "purpose": "Cost assumptions for the transformer-upgrade vs BESS comparison. All editable.",
+    "schema_version": 1
+  },
+  "parameters": {
+    "transformer_upgrade_cost_inr": {"value": 550000, "unit": "INR", "assumption": "5.5 lakh. PRD v1.0 default within an assumed 5-7 lakh range (PRD v2.0 section 1). Editable."},
+    "bess_cost_per_kwh_inr": {"value": 15000, "unit": "INR/kWh", "assumption": "PRD v1.0 default. Editable."},
+    "bess_cost_per_kw_inr": {"value": null, "unit": "INR/kW", "assumption": "TBD"}
+  }
+}

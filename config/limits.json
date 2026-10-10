@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "purpose": "Operating limits and aging-model constants.",
+    "schema_version": 1
+  },
+  "parameters": {
+    "voltage_min_pu": {"value": 0.95, "unit": "p.u.", "source": "PRD v2.0 section 7", "assumption": "Configurable; to be confirmed against the applicable SERC supply code."},
+    "voltage_max_pu": {"value": 1.05, "unit": "p.u.", "source": "PRD v2.0 section 7", "assumption": "Configurable; to be confirmed against the applicable SERC supply code."},
+    "hotspot_warning_c": {"value": 110, "unit": "degC", "source": "PRD v2.0 section 7"},
+    "hotspot_critical_c": {"value": 140, "unit": "degC", "source": "PRD v2.0 section 7"},
+    "loading_info_pct": {"value": 100, "unit": "%", "source": "PRD v2.0 section 7"},
+    "aging_reference_hotspot_c": {"value": 110, "unit": "degC", "source": "IEEE C57.91 as quoted in PRD v2.0 section 7"},
+    "aging_constant": {"value": 15000, "unit": "K", "source": "IEEE C57.91 as quoted in PRD v2.0 section 7"},
+    "aging_reference_kelvin": {"value": 383, "unit": "K", "source": "IEEE C57.91 as quoted in PRD v2.0 section 7"},
+    "normal_insulation_life_hours": {"value": 180000, "unit": "h", "source": "PRD v2.0 section 7 (normal life at reference)"}
+  }
+}

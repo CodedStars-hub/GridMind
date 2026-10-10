@@ -1,0 +1,106 @@
+{
+  "_meta": {
+    "purpose": "Transformer nameplate, thermal parameters, feeder impedance and power factors.",
+    "schema_version": 1
+  },
+  "parameters": {
+    "rated_kva": {
+      "value": 250,
+      "unit": "kVA",
+      "source": "PRD v2.0 section 5 (250 kVA transformer)"
+    },
+    "hv_voltage_kv": {
+      "value": 11,
+      "unit": "kV",
+      "source": "PRD v2.0 section 1 (11 kV/415 V)"
+    },
+    "lv_voltage_v": {
+      "value": 415,
+      "unit": "V",
+      "source": "PRD v2.0 section 1 (11 kV/415 V)"
+    },
+    "source_voltage_pu": {
+      "value": 1.0,
+      "unit": "p.u.",
+      "source": "PRD v2.0 section 7 (HV source at 1.0 p.u., fixed tap)"
+    },
+    "impedance_voltage_pct": {
+      "value": null,
+      "unit": "%",
+      "assumption": "TBD"
+    },
+    "no_load_loss_w": {
+      "value": null,
+      "unit": "W",
+      "assumption": "TBD"
+    },
+    "load_loss_w": {
+      "value": null,
+      "unit": "W",
+      "assumption": "TBD"
+    },
+    "rated_top_oil_rise_c": {
+      "value": null,
+      "unit": "degC",
+      "assumption": "TBD"
+    },
+    "rated_hotspot_rise_over_top_oil_c": {
+      "value": null,
+      "unit": "degC",
+      "assumption": "TBD"
+    },
+    "loss_ratio": {
+      "value": null,
+      "unit": "ratio",
+      "assumption": "TBD"
+    },
+    "oil_exponent": {
+      "value": null,
+      "unit": "none",
+      "assumption": "TBD"
+    },
+    "winding_exponent": {
+      "value": null,
+      "unit": "none",
+      "assumption": "TBD"
+    },
+    "oil_time_constant_min": {
+      "value": null,
+      "unit": "min",
+      "assumption": "TBD"
+    },
+    "winding_time_constant_min": {
+      "value": null,
+      "unit": "min",
+      "assumption": "TBD"
+    },
+    "feeder_resistance_pu": {
+      "value": null,
+      "unit": "p.u.",
+      "assumption": "TBD"
+    },
+    "feeder_reactance_pu": {
+      "value": null,
+      "unit": "p.u.",
+      "assumption": "TBD"
+    },
+    "power_factor_base": {
+      "value": 0.95,
+      "unit": "none",
+      "source": "PRD v2.0 section 7 (base load 0.95 lagging)",
+      "assumption": "Fixed design choice, not a measured value."
+    },
+    "power_factor_ev": {
+      "value": 0.98,
+      "unit": "none",
+      "source": "PRD v2.0 section 7 (EV 0.98)",
+      "assumption": "Fixed design choice, not a measured value."
+    },
+    "power_factor_pv": {
+      "value": 1.0,
+      "unit": "none",
+      "source": "PRD v2.0 section 7 (PV unity)",
+      "assumption": "Fixed design choice, not a measured value."
+    }
+  }
+}

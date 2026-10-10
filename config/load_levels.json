@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "purpose": "Existing-loading presets: base-load peak as a percentage of transformer rating.",
+    "schema_version": 1
+  },
+  "parameters": {
+    "moderate_base_peak_pct_of_rating": {"value": null, "unit": "%", "assumption": "TBD"},
+    "heavy_base_peak_pct_of_rating": {"value": null, "unit": "%", "assumption": "TBD"},
+    "critical_base_peak_pct_of_rating": {"value": null, "unit": "%", "assumption": "TBD"}
+  }
+}

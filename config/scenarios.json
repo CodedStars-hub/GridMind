@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "purpose": "Allowed request values (the finite input space) and the default selection.",
+    "schema_version": 1
+  },
+  "parameters": {
+    "ev_kw_options": {"value": [10, 30, 50, 100], "unit": "kW", "source": "PRD v2.0 section 10"},
+    "pv_kwp_options": {"value": [0, 10, 20, 30], "unit": "kWp", "source": "PRD v2.0 section 10"},
+    "day_type_options": {"value": ["summer_weekday", "winter_weekday", "weekend"], "unit": "enum", "source": "PRD v2.0 section 10"},
+    "load_level_options": {"value": ["moderate", "heavy", "critical"], "unit": "enum", "source": "PRD v2.0 section 10"},
+    "bess_options": {"value": ["off", "auto"], "unit": "enum", "source": "PRD v2.0 section 10"},
+    "default_ev_kw": {"value": 50, "unit": "kW", "assumption": "Demo choice: default scenario preloaded so one click runs (PRD v2.0 section 6). Editable."},
+    "default_pv_kwp": {"value": 30, "unit": "kWp", "assumption": "Demo choice, not an engineering recommendation. Editable."},
+    "default_day_type": {"value": "summer_weekday", "unit": "enum", "assumption": "Demo choice, not an engineering recommendation. Editable."},
+    "default_load_level": {"value": "heavy", "unit": "enum", "assumption": "Demo choice, not an engineering recommendation. Editable."},
+    "default_bess": {"value": "off", "unit": "enum", "assumption": "Demo choice: first run shows the unmitigated case. Editable."}
+  }
+}

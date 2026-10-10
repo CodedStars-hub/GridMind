@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "purpose": "Battery (BESS) efficiency, SOC limits, dispatch thresholds and sizing-sweep settings.",
+    "schema_version": 1
+  },
+  "parameters": {
+    "round_trip_efficiency": {"value": 0.90, "unit": "ratio", "source": "PRD v2.0 section 8.2"},
+    "soc_min_pct": {"value": 10, "unit": "%", "source": "PRD v2.0 section 8.2"},
+    "soc_max_pct": {"value": 90, "unit": "%", "source": "PRD v2.0 section 8.2"},
+    "loading_discharge_threshold_pct": {"value": 90, "unit": "%", "source": "PRD v2.0 section 8.2"},
+    "voltage_discharge_threshold_pu": {"value": 0.95, "unit": "p.u.", "source": "PRD v2.0 section 8.2"},
+    "sweep_power_kw_grid": {"value": null, "unit": "kW", "assumption": "TBD"},
+    "sweep_energy_kwh_grid": {"value": null, "unit": "kWh", "assumption": "TBD"},
+    "charge_window_start": {"value": null, "unit": "HH:MM", "assumption": "TBD"},
+    "charge_window_end": {"value": null, "unit": "HH:MM", "assumption": "TBD"}
+  }
+}
