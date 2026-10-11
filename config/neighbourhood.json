@@ -1,0 +1,222 @@
+{
+  "_meta": {
+    "purpose": "Illustrative neighbourhood topology, charging candidates and planning assumptions.",
+    "schema_version": 1
+  },
+  "parameters": {
+    "neighbourhood_name": {
+      "value": "Model Colony, Sector 14 (illustrative)",
+      "unit": "name",
+      "assumption": "assumption: illustrative neighbourhood label; not an actual surveyed network"
+    },
+    "transformers": {
+      "value": [
+        {
+          "id": "T1",
+          "name": "Residential Block A",
+          "archetype": "residential",
+          "load_level": "heavy",
+          "ev_usage": "evening",
+          "connections": 180,
+          "x": 20,
+          "y": 25
+        },
+        {
+          "id": "T2",
+          "name": "Residential Block B",
+          "archetype": "residential",
+          "load_level": "moderate",
+          "ev_usage": "evening",
+          "connections": 140,
+          "x": 20,
+          "y": 72
+        },
+        {
+          "id": "T3",
+          "name": "Central Market",
+          "archetype": "commercial",
+          "load_level": "heavy",
+          "ev_usage": "daytime",
+          "connections": 90,
+          "x": 52,
+          "y": 28
+        },
+        {
+          "id": "T4",
+          "name": "Metro Station Plaza",
+          "archetype": "commercial",
+          "load_level": "moderate",
+          "ev_usage": "daytime",
+          "connections": 60,
+          "x": 80,
+          "y": 22
+        },
+        {
+          "id": "T5",
+          "name": "Community Hospital",
+          "archetype": "mixed",
+          "load_level": "critical",
+          "ev_usage": "daytime",
+          "connections": 75,
+          "x": 52,
+          "y": 72
+        },
+        {
+          "id": "T6",
+          "name": "Apartment Complex Phase 2",
+          "archetype": "residential",
+          "load_level": "heavy",
+          "ev_usage": "evening",
+          "connections": 220,
+          "x": 82,
+          "y": 70
+        }
+      ],
+      "unit": "transformer objects; x/y map units",
+      "assumption": "assumption: illustrative transformer locations, customer counts and archetypes; each is 250 kVA and shares config/transformer.json; not surveyed data"
+    },
+    "sites": {
+      "value": [
+        {
+          "id": "S1",
+          "name": "Metro Station Plaza",
+          "transformer_id": "T4",
+          "footfall_score": 10,
+          "max_kw": 150,
+          "x": 84,
+          "y": 30
+        },
+        {
+          "id": "S2",
+          "name": "Central Market North",
+          "transformer_id": "T3",
+          "footfall_score": 9,
+          "max_kw": 120,
+          "x": 48,
+          "y": 20
+        },
+        {
+          "id": "S3",
+          "name": "Central Market Parking",
+          "transformer_id": "T3",
+          "footfall_score": 7,
+          "max_kw": 60,
+          "x": 60,
+          "y": 36
+        },
+        {
+          "id": "S4",
+          "name": "Hospital Visitor Parking",
+          "transformer_id": "T5",
+          "footfall_score": 8,
+          "max_kw": 60,
+          "x": 58,
+          "y": 80
+        },
+        {
+          "id": "S5",
+          "name": "Apartment Complex Parking",
+          "transformer_id": "T6",
+          "footfall_score": 6,
+          "max_kw": 90,
+          "x": 88,
+          "y": 78
+        },
+        {
+          "id": "S6",
+          "name": "Block A Clubhouse",
+          "transformer_id": "T1",
+          "footfall_score": 4,
+          "max_kw": 60,
+          "x": 14,
+          "y": 32
+        },
+        {
+          "id": "S7",
+          "name": "Block B Community Park",
+          "transformer_id": "T2",
+          "footfall_score": 3,
+          "max_kw": 30,
+          "x": 14,
+          "y": 80
+        }
+      ],
+      "unit": "site objects; power kW; x/y map units",
+      "assumption": "assumption: illustrative charging candidates, ratings, footfall scores and locations; not measured data"
+    },
+    "target_kw_options": {
+      "value": [
+        150,
+        300,
+        450
+      ],
+      "unit": "kW",
+      "assumption": "assumption: illustrative planning targets; editable planning input"
+    },
+    "target_kw_default": {
+      "value": 300,
+      "unit": "kW",
+      "assumption": "assumption: illustrative default planning target; editable planning input"
+    },
+    "allocation_block_kw": {
+      "value": 10,
+      "unit": "kW",
+      "assumption": "assumption: illustrative discrete allocation block; editable planning input"
+    },
+    "hosting_search_max_kw": {
+      "value": 300,
+      "unit": "kW",
+      "assumption": "assumption: illustrative bounded hosting search ceiling; editable planning input"
+    },
+    "month_weekday_count": {
+      "value": 22,
+      "unit": "days",
+      "assumption": "assumption: illustrative peak summer month weekdays; editable planning input"
+    },
+    "month_weekend_count": {
+      "value": 8,
+      "unit": "days",
+      "assumption": "assumption: illustrative peak summer month weekends using summer weather; editable planning input"
+    },
+    "nominal_home_voltage_v": {
+      "value": 230,
+      "unit": "V",
+      "assumption": "assumption: illustrative nominal household supply voltage; editable planning input"
+    },
+    "managed_cap_fractions": {
+      "value": [
+        0.8,
+        0.6,
+        0.4,
+        0.3
+      ],
+      "unit": "fraction of allocated kW",
+      "assumption": "assumption: illustrative managed charging candidate caps; editable planning input"
+    },
+    "managed_offpeak_start_hour": {
+      "value": 23,
+      "unit": "hour of day",
+      "assumption": "assumption: illustrative overnight redistribution start; editable planning input"
+    },
+    "managed_offpeak_end_hour": {
+      "value": 6,
+      "unit": "hour of day",
+      "assumption": "assumption: illustrative overnight redistribution end; editable planning input"
+    },
+    "min_served_energy_pct_for_managed": {
+      "value": 90,
+      "unit": "%",
+      "assumption": "assumption: illustrative minimum energy retained by managed charging; editable planning input"
+    },
+    "managed_charging_cost_per_site_inr": {
+      "value": 50000,
+      "unit": "INR/site",
+      "assumption": "assumption: illustrative placeholder for a smart-charging controller and communications per site; replace with a quote"
+    },
+    "new_connection_cost_inr_per_kw": {
+      "value": null,
+      "unit": "INR/kW",
+      "assumption": "assumption: illustrative TBD"
+    }
+  }
+}

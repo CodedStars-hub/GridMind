@@ -30,6 +30,19 @@ AMBIENT = {
 }
 
 
+COMMERCIAL = {
+    'summer_weekday': [(0, .35), (5, .30), (8, .55), (10, .85), (13, 1), (16, .95), (19, .80), (21, .55), (24, .35)],
+    'winter_weekday': [(0, .32), (6, .30), (9, .60), (12, .90), (14, 1), (17, .90), (20, .70), (22, .45), (24, .32)],
+    'weekend': [(0, .38), (6, .30), (10, .70), (14, .95), (18, 1), (21, .85), (23, .50), (24, .38)],
+}
+EV_DAYTIME_WEEKDAY = [(0, .02), (6, .04), (8, .25), (10, .60), (12, .85), (15, 1), (18, .90), (20, .60), (22, .25), (24, .02)]
+EV_DAYTIME = {
+    'summer_weekday': EV_DAYTIME_WEEKDAY,
+    'winter_weekday': EV_DAYTIME_WEEKDAY,
+    'weekend': [(0, .03), (8, .20), (11, .70), (14, 1), (18, 1), (21, .70), (23, .20), (24, .03)],
+}
+
+
 def interpolate(anchors):
     """Sample the supplied day anchors every quarter hour, rounded to four decimals."""
     values = []
@@ -57,6 +70,12 @@ def generate(output_dir):
         ('ambient_profile', AMBIENT, 'degC',
          'assumption: typical Delhi day; summer range 30-43 C within the PRD range of 30-45 C; weekend uses summer weather; winter values are illustrative'),
     ]
+    definitions.extend([
+        ('base_load_commercial_profile', COMMERCIAL, 'fraction of base peak; peak = 1.0',
+         'assumption: illustrative shop/office/market load peaking in the afternoon with an evening shoulder; not measured data'),
+        ('ev_daytime_profile', EV_DAYTIME, 'fraction of charging site rating; 1.0 = full rated power',
+         'assumption: footfall-driven daytime charging at commercial and institutional sites; not measured data'),
+    ])
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, anchors_by_day, unit, note in definitions:
@@ -68,6 +87,21 @@ def generate(output_dir):
             },
         }
         (output_dir / f'{name}.json').write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+
+    # Blend the authored, rounded samples, then normalize each day independently.
+    mixed = {}
+    for day in BASE:
+        blend = [0.5 * (residential + commercial)
+                 for residential, commercial in zip(interpolate(BASE[day]), interpolate(COMMERCIAL[day]))]
+        peak = max(blend)
+        mixed[day] = {
+            'value': [round(value / peak, 4) for value in blend],
+            'unit': 'fraction of base peak; peak = 1.0',
+            'assumption': 'assumption: equal blend of the residential and commercial shapes, renormalised to peak 1.0, representing institutional sites such as hospitals; not measured data',
+        }
+    data = {'_meta': {'purpose': 'Illustrative daily base_load_mixed_profile samples at 15-minute intervals.', 'schema_version': 1},
+            'parameters': mixed}
+    (output_dir / 'base_load_mixed_profile.json').write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
 
 
 if __name__ == '__main__':

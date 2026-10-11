@@ -100,7 +100,7 @@ def test_regeneration_is_byte_identical(tmp_path):
     subprocess.run(command, check=True, capture_output=True, text=True)
     second = {path.name: path.read_bytes() for path in output.glob('*.json')}
     actual = {path.name: path.read_bytes() for path in (ROOT / 'config' / 'profiles').glob('*.json')}
-    assert len(first) == 4
+    assert len(first) == 7
     assert first == second == actual
 
 

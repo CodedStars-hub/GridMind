@@ -1,8 +1,8 @@
-# GridMind API Contract (v0.1.0)
+# GridMind API Contract (v3)
 
 Single source of truth for request and response shapes. Engine, Lambda and frontend must all match this file. If a field changes, change this file first.
 
-> Planning-grade model of one transformer. Values marked TBD are not final.
+> Planning-grade neighbourhood planning with the unchanged single-transformer model. Values marked TBD are not final.
 
 ## 1. Conventions
 
@@ -26,26 +26,22 @@ Single source of truth for request and response shapes. Engine, Lambda and front
 | `pv_kwp` | integer | kWp | no | `0`, `10`, `20`, `30` |
 | `day_type` | string | enum | no | `"summer_weekday"`, `"winter_weekday"`, `"weekend"` |
 | `load_level` | string | enum | no | `"moderate"`, `"heavy"`, `"critical"` |
-| `bess` | string | enum | no | `"off"`, `"auto"` (used for precompute keys and `/dispatch`) |
+| `bess` | string | enum | no | `"off"`, `"auto"` (used for legacy single-transformer keys) |
 | `bess_override` | object or null | none | yes | Optional, `/simulate` only. `{ "power_kw": number, "energy_kwh": number }`. Default `null` |
 
-The four scenario fields are required; `bess` is required only on `/dispatch`. Only `bess_override` may be omitted, defaulting to null. Unknown request fields are rejected.
+The four scenario fields are required for `/simulate`; the shared validator defaults optional `bess` to `off` and `bess_override` to null. These enums describe the legacy single-transformer request only. New neighbourhood request shapes are defined in section 3; unknown request fields are rejected.
 
 Any other value is rejected with `invalid_input` and the offending field name.
 
 ## 3. Routes
 
-**M4 local adapter notes:** Paths accept one optional leading `/api` segment and a trailing slash. All responses carry `Content-Type: application/json` and `Cache-Control: no-store`. The decoded request body limit is 2048 UTF-8 bytes. `/simulate` with a battery option currently returns 400 `invalid_input` with field `bess` until M8. `/optimize` and `/dispatch` return 404 `not_found` until M9 and M11 respectively. `/scenarios` assumptions cover parameters from transformer, limits, costs, bess and load_levels only, excluding scenarios and profiles. Internal errors always use the fixed public message `internal error`.
+This is the v3 design contract; M5 adds data and documentation, not handlers. The existing M4 adapter still implements only GET /scenarios and POST /simulate. Other routes remain unavailable until their implementation milestones. POST /optimize is superseded by POST /plan; the v3 dispatch request replaces the legacy dispatch request.
 
-**Request validation rules:** The shared validator requires `ev_kw`, `pv_kwp`, `day_type`, and `load_level`. `bess` is optional (default `off` from scenarios config); `bess_override` is optional (default null). EV and PV selections must be exact integers, excluding booleans and floats; day, load level and BESS choices must be exact strings from config. An override must contain exactly `power_kw` and `energy_kwh`, each finite and positive, with integer or float type excluding booleans; no upper bounds yet. Unknown keys are rejected. Failures use `invalid_input` with the offending `field` named (nested override fields use `bess_override.<key>`; a non-object payload uses `payload`). Route-specific request rules below still apply.
+All successful routes return HTTP 200. Paths accept one optional leading `/api` segment and a trailing slash. Responses use `Content-Type: application/json` and `Cache-Control: no-store`. The decoded UTF-8 body limit remains 2048 bytes. Error codes and HTTP statuses remain those in section 5; internal errors use the fixed public message `internal error`.
 
-Common request body for the POST routes (the "scenario"):
+Single-transformer request validation remains unchanged: exact integer EV/PV choices (not bool or float), exact string choices from scenarios config, and finite positive override power/energy numbers (not bool), without upper bounds yet. Battery simulation returns 400 invalid_input with field bess until M8. `/scenarios` assumptions cover transformer, limits, costs, bess and load_levels parameters only, excluding scenarios and profiles.
 
-```json
-{ "ev_kw": 50, "pv_kwp": 30, "day_type": "summer_weekday", "load_level": "heavy" }
-```
-
-Successful routes return HTTP 200. All routes can return `not_found` for an unknown path, `method_not_allowed` for an unsupported method, or `internal_error` for an unexpected failure.
+The common legacy scenario is `{ "ev_kw": 50, "pv_kwp": 30, "day_type": "summer_weekday", "load_level": "heavy" }`. New request objects below are exact: required fields may not be omitted and unknown fields are rejected. Nullability applies to present fields; all numbers must be finite.
 
 ### 3.1 GET /scenarios
 
@@ -88,65 +84,320 @@ The override members `power_kw` and `energy_kwh` are required, non-null finite p
 
 With `bess_override = null`, `series.bess_*` are `null`, and `bess` and `cost` are `null`.
 
-### 3.3 POST /optimize
+### 3.3 POST /optimize (superseded)
 
-| Item | Value |
-|---|---|
-| Request body | Scenario (above). `bess` is implied `"auto"` |
-| Errors | `invalid_input`, `method_not_allowed`, `convergence_failed`, `internal_error` |
+Superseded by POST /plan. No v3 request or success shape is assigned to /optimize; the current adapter returns 404 not_found, `route not available yet`. The legacy auto key format is retained in section 6.
 
-Success response:
+### 3.4 GET /network
 
-| Field | Type | Nullable | Notes |
-|---|---|---|---|
-| `meta` | object | no | Same as simulation `meta` (section 4) |
-| `before` | simulation result | no | No-BESS result |
-| `after` | simulation result | yes | With-BESS result. `null` if no feasible BESS exists |
-| `bess` | object | yes | Same shape as section 4 `bess`. `null` if none feasible |
-| `cost` | object | yes | Same shape as section 4 `cost`. `null` if no BESS result |
-| `verdict` | object | no | `{ status, message }`, same as section 4 `verdict` |
-
-### 3.4 POST /dispatch
-
-| Item | Value |
-|---|---|
-| Request body | Scenario (above) plus required `bess`: `"off"` or `"auto"`; no `bess_override` |
-| Errors | `invalid_input`, `method_not_allowed`, `convergence_failed`, `internal_error` |
-
-Success response:
-
-| Field | Type | Nullable | Notes |
-|---|---|---|---|
-| `meta` | object | no | Same as simulation `meta` |
-| `payload` | object | no | OpenADR-style payload (below) |
-| `published` | boolean | no | `true` if the IoT publish succeeded |
-| `publish_error` | string | yes | Reason if publish failed, else `null`. The payload is returned either way |
-
-OpenADR-style payload:
-
-| Field | Type | Nullable | Notes |
-|---|---|---|---|
-| `event_id` | string | no | Unique event id |
-| `mock` | boolean | no | Always `true` |
-| `event_start` | string | no | ISO 8601 timestamp |
-| `event_end` | string | no | ISO 8601 timestamp; exclusive end |
-| `intervals` | list | no | 96 items, see below |
-| `baseline_kw` | list of 96 numbers | no | Net load without BESS, kW |
-| `note` | string | no | States the payload is modelled on OpenADR 2.0b but is not certified |
-
-`intervals[]` item:
-
-| Field | Type | Unit | Nullable | Notes |
+| Field | Type | Unit | Nullable | Meaning |
 |---|---|---|---|---|
-| `index` | integer | none | no | 0 to 95 |
-| `start` | string | HH:MM | no | Start on the time axis |
-| `duration_min` | integer | min | no | 15 |
-| `signal_type` | string | enum | no | `charge`, `discharge`, `idle` |
-| `power_kw` | number | kW | no | Positive = discharge, negative = charge, zero = idle |
+| `meta` | object | none | no | Neighbourhood route meta defined in section 3.5 |
+| `neighbourhood` | object | none | no | Name and diagram dimensions |
+| `neighbourhood.name` | string | none | no | neighbourhood_name from config |
+| `neighbourhood.map` | object | none | no | Map coordinate extent |
+| `neighbourhood.map.width` | integer | map units | no | 100 |
+| `neighbourhood.map.height` | integer | map units | no | 100 |
+| `transformers` | array of objects | none | no | Transformer entries below |
+| `sites` | array of objects | none | no | Candidate site entries below |
+| `defaults` | object | none | no | Planning defaults |
+| `defaults.target_kw` | integer | kW | no | target_kw_default |
+| `defaults.month` | object | none | no | Illustrative summer month |
+| `defaults.month.weekday_count` | integer | days | no | month_weekday_count |
+| `defaults.month.weekend_count` | integer | days | no | month_weekend_count |
+| `enums` | object | none | no | Available targets |
+| `enums.target_kw` | array of integers | kW | no | target_kw_options |
+| `assumptions` | array of objects | none | no | Exact config keys with value/unit/note; item schema below |
 
-Event timestamps include a UTC offset and span one 24-hour day. The mock calendar date is a design decision for M11. Dispatch with `bess=off` uses 96 idle intervals; `bess=auto` uses the optimized schedule, or idle intervals when no BESS is selected. Publish failures return HTTP 200 with `published=false` and a non-null `publish_error`; otherwise `publish_error=null`.
+Network transformer item
 
-Unknown paths return `not_found` (404) from any route.
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `id` | string | identifier | no | Unique transformer id |
+| `name` | string | none | no | Display name |
+| `archetype` | string | enum | no | residential, commercial, mixed |
+| `load_level` | string | enum | no | Load level from config/load_levels.json |
+| `ev_usage` | string | enum | no | evening or daytime |
+| `connections` | integer | customers | no | Existing customer connections |
+| `rated_kva` | number | kVA | no | Shared transformer rated_kva |
+| `x` | number | map units | no | Coordinate within 0..100 |
+| `y` | number | map units | no | Coordinate within 0..100 |
+
+Network site item
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `id` | string | identifier | no | Unique site id |
+| `name` | string | none | no | Display name |
+| `transformer_id` | string | identifier | no | Existing transformer id |
+| `footfall_score` | integer | score | no | 1..10 |
+| `max_kw` | integer | kW | no | Site rating ceiling |
+| `x` | number | map units | no | Coordinate within 0..100 |
+| `y` | number | map units | no | Coordinate within 0..100 |
+
+Network assumption item
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `name` | string | config key | no | Exact unique config parameter name |
+| `value` | JSON value | as indicated by unit | yes | Includes null for TBD |
+| `unit` | string | none | no | Config unit |
+| `note` | string | none | no | Non-empty source and/or assumption text |
+
+Network assumptions cover neighbourhood, transformer, limits, costs, bess and load_levels parameters, without profile arrays or scenarios enums. This wider scope does not change GET /scenarios. GET /network has no request body.
+
+### 3.5 Neighbourhood route meta
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `engine_version` | string | none | no | Engine package version; independent of contract v3 |
+| `source` | string | enum | no | live or cached |
+| `inputs` | object | none | no | Exact normalized request body; empty object for GET /network |
+
+This meta belongs to /network, /assess, /plan and /dispatch. Nested single-transformer simulation meta remains exactly section 4. Neighbourhood charging totals need not match the legacy ev_kw enums; how the later assessment adapter echoes its aggregate inputs is deferred to its implementation milestone, without changing section 4 in M5.
+
+### 3.6 Allocation
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `site_id` | string | identifier | no | Existing network site id |
+| `kw` | integer | kW | no | Non-negative multiple of allocation_block_kw, no more than site max_kw |
+| `managed` | boolean | none | no | Whether managed charging applies |
+| `cap_fraction` | number | fraction | yes | Null when unmanaged; configured managed_cap_fractions entry when managed |
+
+An allocation is an array of these objects, at most one per site. Omitted sites receive zero charging. Transformer EV load is the sum of the served site profiles attached to it. Empty allocation is valid. Battery and upgrade remedy effects belong to the planning assessment, not extra allocation fields.
+
+### 3.7 POST /assess
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `request.allocation` | allocation array | none | no | Only required request member |
+| `meta` | object | none | no | Neighbourhood route meta |
+| `assessment` | object | none | no | Assessment below |
+| `assessment.transformers` | array of T objects | none | no | One entry per neighbourhood transformer |
+| `assessment.totals` | object | none | no | Totals below |
+
+Transformer assessment T
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `transformer_id` | string | identifier | no | Network transformer id |
+| `existing_peak_kw` | number | kW | no | Base peak from own archetype and load level |
+| `new_charging_kw` | number | kW | no | Sum of allocated kW on its sites |
+| `status` | string | enum | no | healthy, watch, overloaded |
+| `simulation` | object | none | no | Full unchanged section 4 result for summer_weekday |
+| `weekend_summary` | object | none | no | Exactly section 4.3 summary for weekend |
+| `month` | object | none | no | Monthly projection below |
+| `household` | object | none | no | Household indicators below |
+| `hosting` | object | none | no | Capacity estimates below |
+
+Classify each day as overloaded if any hotspot_critical alert exists or peak_loading_pct > 100; otherwise watch if any other warning-severity alert exists; otherwise healthy. T.status is the worse of summer_weekday and weekend, ordered healthy < watch < overloaded. The simulation verdict is preserved and is distinct from this neighbourhood status.
+
+Monthly projection
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `weekday_count` | integer | days | no | Configured weekday count |
+| `weekend_count` | integer | days | no | Configured weekend count |
+| `equivalent_aging_hours` | number | h/month | no | weekday_count × daily weekday aging + weekend_count × daily weekend aging |
+| `life_consumed_days` | number | equivalent life days/month | no | equivalent_aging_hours / 24 |
+| `calendar_days` | integer | days/month | no | weekday_count + weekend_count |
+| `aging_ratio` | number | ratio | no | life_consumed_days / calendar_days |
+| `life_consumed_years` | number | equivalent life years/month | no | equivalent_aging_hours / 8760 |
+| `depreciation_inr` | integer | INR/month | no | transformer_upgrade_cost_inr × equivalent_aging_hours / normal_insulation_life_hours; rounded to INR |
+| `life_expectancy_years` | number | years | no | Engine life estimate at monthly average daily equivalent aging, with configured cap |
+
+A weekday is summer_weekday and a weekend uses the summer-weather weekend profiles. Project repeated representative days; do not interpret the month as a measured forecast. Depreciation is the share of transformer value consumed by modelled insulation aging, not a failure prediction.
+
+Household indicators
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `connections` | integer | customers | no | Transformer customer count |
+| `nominal_voltage_v` | number | V | no | nominal_home_voltage_v |
+| `min_voltage_v` | number | V | no | simulation.summary.min_voltage_pu × nominal_voltage_v |
+| `hours_below_limit` | number | h/weekday | no | Count of strict voltage-low steps × step_minutes / 60 |
+| `customer_hours_per_day` | number | customer-h/weekday | no | connections × hours_below_limit |
+| `customer_hours_per_month` | number | customer-h/month | no | connections × (weekday_count × weekday low-voltage hours + weekend_count × weekend low-voltage hours) |
+| `heater_output_pct_at_min` | number | % of nominal output | no | 100 × V² |
+| `motor_start_torque_pct_at_min` | number | % of nominal torque | no | 100 × V² |
+| `motor_run_current_increase_pct_at_min` | number | % increase | no | 100 × (1/V − 1), constant-power motor |
+
+V is the weekday minimum voltage in per unit. These three appliance indicators are indicative engineering rules of thumb, not measured appliance behaviour. A negative current increase indicates a modelled decrease above nominal voltage. Weekend voltage-low duration is calculated during assessment even though only its summary is returned.
+
+Hosting capacity
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `unmanaged_kw` | integer | kW | no | Largest uncontrolled charging level healthy on both day types |
+| `managed_kw` | integer | kW | no | Largest managed level healthy on both day types using the best configured cap fraction |
+
+Search in allocation_block_kw steps, from zero through hosting_search_max_kw, using each transformer's own load level, base archetype and ev_usage profile. Hosting is additional charging against existing base load, not spare capacity after the submitted allocation. Return zero if no positive candidate is healthy; managed candidates must also retain the configured minimum served energy percentage. Choose the cap yielding largest healthy capacity, breaking ties by highest served energy then highest cap fraction.
+
+Assessment totals
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `life_consumed_days_per_month` | number | equivalent life days/month | no | Sum of transformer month.life_consumed_days |
+| `depreciation_inr_per_month` | integer | INR/month | no | Sum of transformer month.depreciation_inr |
+| `transformers_in_violation` | integer | transformers | no | Count with status watch or overloaded |
+| `connections_affected` | integer | customers | no | Sum connections for transformers with any voltage_low alert on either day |
+| `customer_hours_per_month` | number | customer-h/month | no | Sum of household monthly exposures |
+| `worst_min_voltage_v` | number | V | no | Lowest minimum on either day across transformers, scaled to nominal household volts |
+| `worst_hotspot_c` | number | °C | no | Highest hot-spot on either day across transformers |
+| `served_kw_peak` | number | kW | no | Peak of the simultaneous served charging sum over sites on the representative weekday |
+| `served_energy_kwh_per_day` | number | kWh/weekday | no | Sum of served site charging samples × step_minutes / 60 on summer_weekday |
+
+### 3.8 POST /plan
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `request.target_kw` | integer | kW | no | Only required request member; from target_kw_options |
+| `meta` | object | none | no | Neighbourhood route meta |
+| `baseline` | object | none | no | Unplanned case below |
+| `plan` | object | none | no | Planned allocation and remedies below |
+| `comparison` | object | none | no | Comparison below |
+
+Baseline
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `description` | string | none | no | Exact label: Unplanned installation (modelled) |
+| `allocation` | allocation array | none | no | Fill sites by descending footfall_score, each up to max_kw until target is met; unmanaged with cap_fraction null |
+| `assessment` | object | none | no | Full assessment as section 3.7 |
+
+The baseline is MODELLED and every UI must label it **Unplanned installation (modelled)**. Equal footfall scores resolve by site_id ascending. Allocations obey block size and never exceed target.
+
+Plan
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `allocation` | allocation array | none | no | Selected charging placements |
+| `assessment` | object | none | no | Full assessment under the selected remedies |
+| `remedies` | array of objects | none | no | Remedy items below |
+| `unplaced_kw` | integer | kW | no | target_kw minus sum of selected allocation.kw |
+| `cost` | object | none | no | Cost components below |
+
+Remedy item
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `site_id` | string | identifier | no | Affected site |
+| `transformer_id` | string | identifier | no | Attached transformer |
+| `type` | string | enum | no | none, managed_charging, reallocate, battery, upgrade |
+| `parameters` | object | none | no | Remedy settings; schema below |
+| `cost_inr` | integer | INR | no | Cost charged to this remedy; zero for no action |
+| `reason` | string | none | no | Plain-English rationale |
+| `alternatives_considered` | array of objects | none | no | Alternatives below |
+
+Remedy parameters by type
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `none` | empty object | none | no | No settings |
+| `managed_charging` | object | none | no | cap_fraction: non-null number, fraction from config |
+| `reallocate` | object | none | no | from_site_id and to_site_id: non-null strings; kw: non-null integer kW |
+| `battery` | object | none | no | power_kw: non-null number kW; energy_kwh: non-null number kWh |
+| `upgrade` | object | none | no | rated_kva: non-null positive number kVA; later milestone supplies engineering sizing |
+
+Alternative considered
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `type` | string | enum | no | Same five remedy types |
+| `feasible` | boolean | none | no | Healthy on both representative days and any required energy condition met |
+| `cost_inr` | integer | INR | yes | Null if cost cannot be estimated yet |
+| `reason` | string | none | no | Why accepted, rejected, or not evaluable |
+
+Plan cost
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `controllers_inr` | integer | INR | no | Managed controller costs |
+| `battery_inr` | integer | INR | no | Battery costs |
+| `upgrade_inr` | integer | INR | no | Transformer upgrade costs |
+| `connections_inr` | integer | INR | no | New connection costs; see TBD handling below |
+| `total_inr` | integer | INR | no | Sum of the four components |
+
+Shared transformer remedies are charged once, not once per attached site; repeated remedy entries carry zero incremental cost. Until new_connection_cost_inr_per_kw is supplied, connections_inr is an explicitly uncosted zero placeholder; reasons and UI must disclose exclusion, not imply a quoted free connection. An unpriced alternative has cost_inr null and cannot win the cheapest-feasible comparison.
+
+Comparison
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `target_kw` | integer | kW | no | Requested target |
+| `placed_kw_baseline` | integer | kW | no | Sum baseline allocation.kw |
+| `placed_kw_plan` | integer | kW | no | Sum plan allocation.kw |
+| `served_energy_kwh_per_day_baseline` | number | kWh/weekday | no | Baseline assessment total |
+| `served_energy_kwh_per_day_plan` | number | kWh/weekday | no | Plan assessment total |
+| `served_pct_of_baseline` | number | % | no | 100 × plan served energy / baseline served energy; zero if baseline energy is zero |
+| `deltas` | object | mixed units | no | Plan minus baseline totals, defined below |
+| `net` | object | none | no | Financial comparison below |
+
+Comparison deltas (plan minus baseline)
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `life_consumed_days_per_month` | number | equivalent life days/month | no | Change in total modelled damage |
+| `depreciation_inr_per_month` | integer | INR/month | no | Change in depreciation |
+| `customer_hours_per_month` | number | customer-h/month | no | Change in exposure |
+| `connections_affected` | integer | customers | no | Change in affected connections |
+| `worst_min_voltage_v` | number | V | no | Change in worst minimum voltage; positive is improvement |
+| `worst_hotspot_c` | number | °C | no | Change in worst temperature; negative is improvement |
+| `transformers_in_violation` | integer | transformers | no | Change in violation count |
+
+Comparison net
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `damage_avoided_inr_per_month` | integer | INR/month | no | Baseline depreciation minus plan depreciation; signed |
+| `plan_cost_inr` | integer | INR | no | Plan total cost |
+| `payback_months` | number | months | yes | plan_cost_inr / damage_avoided_inr_per_month; null if damage avoided is not positive |
+
+Payback compares modelled depreciation avoided to the explicitly costed intervention; it is not guaranteed cash savings, avoided outages, or a failure prediction.
+
+### 3.9 POST /dispatch (v3 replacement)
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `request.site_id` | string | identifier | no | Required existing site id; must occur in allocation |
+| `request.allocation` | allocation array | none | no | Required site allocations |
+| `meta` | object | none | no | Neighbourhood route meta |
+| `payload` | object | none | no | Charger-cap event below |
+| `published` | boolean | none | no | Whether publish succeeded |
+| `publish_error` | string | none | yes | Null on success; failure reason otherwise |
+
+Charger power-cap payload
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `event_id` | string | identifier | no | Unique event id |
+| `mock` | boolean | none | no | Always true |
+| `site_id` | string | identifier | no | Requested charging site |
+| `event_start` | string | ISO 8601 timestamp | no | Offset-aware start |
+| `event_end` | string | ISO 8601 timestamp | no | Exclusive end, one day later |
+| `intervals` | array of objects | none | no | 96 ordered cap intervals |
+| `baseline_kw` | array of numbers | kW | no | 96 uncontrolled samples: allocated kw × own ev_usage shape |
+| `note` | string | none | no | Exact text: modelled on OpenADR 2.0b, not certified |
+
+Dispatch interval
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `index` | integer | step | no | 0..95 |
+| `start` | string | HH:MM | no | Step-start label |
+| `duration_min` | integer | min | no | Configured step_minutes, currently 15 |
+| `cap_kw` | number | kW | no | Non-negative charger power cap; no signed battery signal |
+
+This replaces the old charge/discharge/idle battery event, not the simulation result object. Managed sites use the redistributed served profile as their cap schedule; unmanaged sites use baseline_kw. The site follows its transformer's ev_usage. A publish failure still returns the payload with published false and a non-null publish_error. Mock event date is chosen in the dispatch milestone.
+
+### 3.10 Remedy ladder and managed charging
+
+Try managed_charging first, then reallocate, then battery, then upgrade. Evaluate feasible candidates and select the cheapest known cost, using ladder order for equal-cost ties; the ladder does not mean accepting an expensive early candidate without comparing cheaper later candidates. Feasible means the transformer is healthy on BOTH summer_weekday and weekend; reallocation must keep source and destination healthy. Retain at least min_served_energy_pct_for_managed of each managed site's uncontrolled energy on each day type.
+
+For each managed site, first cap its uncontrolled shape at cap_fraction × allocated kW. Redistribute excess energy into the overnight window from managed_offpeak_start_hour inclusive through midnight to managed_offpeak_end_hour exclusive, filling available room up to the same cap, earliest chronological daily step first. Never exceed the site cap or create extra energy. Energy that cannot fit is unserved. Sum served site profiles on each transformer. Evening uses ev_profile; daytime uses ev_daytime_profile. Residential uses base_load_profile, commercial uses base_load_commercial_profile, and mixed uses base_load_mixed_profile. Weekend uses summer PV and ambient weather. Existing limits, thermal equations, power factors and engine remain unchanged.
+
+Battery and upgrade candidate sizing, bounds and costs need later engineering implementation; M5 supplies no new engineering values and no planner algorithm. Alternative reasons must state unpriced or unevaluable candidates honestly. Zero target shortfall does not imply full energy delivery: compare served energy as well as placed rating.
 
 ## 4. Simulation result object
 
@@ -299,9 +550,13 @@ S3 path pattern: `precomputed/<key>.json`
 
 Route mapping: `/simulate` maps to `bess=off`. `/optimize` maps to `bess=auto`. Override simulations bypass this cache. Cached `auto` objects use the full `/optimize` response shape; cached `off` objects use the simulation result shape. If no violations exist, optimization may return `after=null`, `bess=null`, `cost=null`, and a `safe` verdict; no extra auto entry is required.
 
+### 6.1 Neighbourhood cache artifacts
+
+Retain the single-transformer key exactly: `ev{ev_kw}_pv{pv_kwp}_{day_type}_{load_level}_{bess}`. Its historical auto entries refer to the superseded optimizer, not /plan. Add `precomputed/network.json` for the full GET /network response and `precomputed/plan_target{target_kw}.json` for the full POST /plan response. The three target files are plan_target150.json, plan_target300.json and plan_target450.json; network.json is a separate fourth artifact. /assess and /dispatch do not share target-only cache keys. Changed neighbourhood assumptions require regenerating these artifacts; cached meta.source is cached. Error codes and the 2048-byte body limit are unchanged.
+
 ## 7. PRD output coverage
 
-Every PRD v2.0 output (sections 8.5 and 11) mapped to a contract field.
+Legacy simulation outputs and v3 neighbourhood product outputs mapped to actual fields. Route-relative paths below use the /plan response unless another route is named.
 
 | PRD output | Contract field(s) | Notes |
 |---|---|---|
@@ -330,6 +585,21 @@ Every PRD v2.0 output (sections 8.5 and 11) mapped to a contract field.
 | CSV column: loading | `series.loading_pct` | In % of rated kVA |
 | CSV column: BESS SOC | `series.bess_soc_pct` | `null` when no BESS |
 | CSV column: aging (extra) | `series.aging_factor` | Extra column beyond the five PRD columns |
+| Before/after damage | `baseline.assessment.totals.life_consumed_days_per_month; plan.assessment.totals.life_consumed_days_per_month` | Modelled equivalent life days |
+| Life lost per month in days and years | `baseline.assessment.transformers[].month.life_consumed_days; plan.assessment.transformers[].month.life_consumed_years` | Both month fields exist on before and after T objects |
+| Depreciation in rupees | `baseline.assessment.totals.depreciation_inr_per_month; plan.assessment.totals.depreciation_inr_per_month` | Share of transformer value consumed |
+| Household volts | `plan.assessment.transformers[].household.nominal_voltage_v; plan.assessment.transformers[].household.min_voltage_v` | Nominal and minimum household volts |
+| Household hours and customer-hours | `plan.assessment.transformers[].household.hours_below_limit; plan.assessment.transformers[].household.customer_hours_per_day; plan.assessment.transformers[].household.customer_hours_per_month` | Daily and monthly low-voltage exposure |
+| Hosting capacity | `plan.assessment.transformers[].hosting.unmanaged_kw; plan.assessment.transformers[].hosting.managed_kw` | Healthy on both representative days |
+| Remedies and reasons | `plan.remedies[].type; plan.remedies[].parameters; plan.remedies[].reason; plan.remedies[].alternatives_considered` | Costed intervention and rejected alternatives |
+| 24h simulation series | `plan.assessment.transformers[].simulation.series` | Full unchanged section 4 series |
+| Dispatch schedule | `POST /dispatch payload.intervals[].cap_kw; payload.baseline_kw` | 96 charger cap intervals |
+| Neighbourhood map | `GET /network neighbourhood.map; transformers[].x; transformers[].y; sites[].x; sites[].y` | Diagram coordinates and dimensions |
+| Allocation and unplaced target | `baseline.allocation; plan.allocation; plan.unplaced_kw` | Site ratings and remaining target |
+| Served energy and percent | `comparison.served_energy_kwh_per_day_baseline; comparison.served_energy_kwh_per_day_plan; comparison.served_pct_of_baseline` | Representative weekday energy |
+| Damage avoided and payback | `comparison.net.damage_avoided_inr_per_month; comparison.net.plan_cost_inr; comparison.net.payback_months` | Payback null when avoided damage is not positive |
+| Appliance indicators | `plan.assessment.transformers[].household.heater_output_pct_at_min; plan.assessment.transformers[].household.motor_start_torque_pct_at_min; plan.assessment.transformers[].household.motor_run_current_increase_pct_at_min` | Indicative rules of thumb only |
+| Affected connections and violation counts | `plan.assessment.totals.connections_affected; plan.assessment.totals.transformers_in_violation; comparison.deltas.connections_affected` | Counted customers and transformer statuses |
 
 ## 8. CSV export
 
@@ -343,3 +613,55 @@ One header row followed by 96 data rows, in this exact column order. A null SOC 
 | loading_pct | `series.loading_pct` | number | % | no |
 | bess_soc_pct | `series.bess_soc_pct` | number | % | yes |
 | aging_factor | `series.aging_factor` | number | none | no |
+## 9. Worked /plan JSON structure
+
+Arrays are shortened to three values for readability; transformer assessment details are omitted here. Numeric values below illustrate types and nesting only and are not calculated outcomes. A production response includes all transformer assessments and full 96-step simulation arrays as specified above.
+
+```json
+{
+  "meta": {"engine_version": "0.1.0", "source": "live", "inputs": {"target_kw": 300}},
+  "baseline": {
+    "description": "Unplanned installation (modelled)",
+    "allocation": [
+      {"site_id": "S1", "kw": 150, "managed": false, "cap_fraction": null},
+      {"site_id": "S2", "kw": 120, "managed": false, "cap_fraction": null},
+      {"site_id": "S4", "kw": 30, "managed": false, "cap_fraction": null}
+    ],
+    "assessment": {"transformers": [], "totals": {
+      "life_consumed_days_per_month": 0, "depreciation_inr_per_month": 0,
+      "transformers_in_violation": 0, "connections_affected": 0, "customer_hours_per_month": 0,
+      "worst_min_voltage_v": 230, "worst_hotspot_c": 30, "served_kw_peak": 300, "served_energy_kwh_per_day": 300
+    }}
+  },
+  "plan": {
+    "allocation": [
+      {"site_id": "S1", "kw": 150, "managed": true, "cap_fraction": 0.8},
+      {"site_id": "S2", "kw": 120, "managed": false, "cap_fraction": null},
+      {"site_id": "S4", "kw": 30, "managed": false, "cap_fraction": null}
+    ],
+    "assessment": {"transformers": [], "totals": {
+      "life_consumed_days_per_month": 0, "depreciation_inr_per_month": 0,
+      "transformers_in_violation": 0, "connections_affected": 0, "customer_hours_per_month": 0,
+      "worst_min_voltage_v": 230, "worst_hotspot_c": 30, "served_kw_peak": 270, "served_energy_kwh_per_day": 300
+    }},
+    "remedies": [{"site_id": "S1", "transformer_id": "T4", "type": "managed_charging",
+      "parameters": {"cap_fraction": 0.8}, "cost_inr": 50000,
+      "reason": "Illustrative cap and redistribution; connection cost is uncosted until a quote is supplied.",
+      "alternatives_considered": [
+        {"type": "none", "feasible": false, "cost_inr": 0, "reason": "Illustrative rejected candidate."},
+        {"type": "managed_charging", "feasible": true, "cost_inr": 50000, "reason": "Illustrative selected candidate."},
+        {"type": "battery", "feasible": false, "cost_inr": null, "reason": "Sizing and full cost not evaluated in this structure example."}
+      ]}],
+    "unplaced_kw": 0,
+    "cost": {"controllers_inr": 50000, "battery_inr": 0, "upgrade_inr": 0, "connections_inr": 0, "total_inr": 50000}
+  },
+  "comparison": {
+    "target_kw": 300, "placed_kw_baseline": 300, "placed_kw_plan": 300,
+    "served_energy_kwh_per_day_baseline": 300, "served_energy_kwh_per_day_plan": 300, "served_pct_of_baseline": 100,
+    "deltas": {"life_consumed_days_per_month": 0, "depreciation_inr_per_month": 0,
+      "customer_hours_per_month": 0, "connections_affected": 0, "worst_min_voltage_v": 0,
+      "worst_hotspot_c": 0, "transformers_in_violation": 0},
+    "net": {"damage_avoided_inr_per_month": 0, "plan_cost_inr": 50000, "payback_months": null}
+  }
+}
+```
