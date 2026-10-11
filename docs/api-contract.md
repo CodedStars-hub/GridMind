@@ -35,7 +35,7 @@ Any other value is rejected with `invalid_input` and the offending field name.
 
 ## 3. Routes
 
-This is the v3 design contract; M5 adds data and documentation, not handlers. The existing M4 adapter still implements only GET /scenarios and POST /simulate. Other routes remain unavailable until their implementation milestones. POST /optimize is superseded by POST /plan; the v3 dispatch request replaces the legacy dispatch request.
+This is the v3 design contract. M11 exposes implemented operations through the versioned transport in section 13; future operations remain unavailable. POST /optimize is superseded by POST /plan; the v3 dispatch request replaces the legacy dispatch request when dispatch is implemented.
 
 All successful routes return HTTP 200. Paths accept one optional leading `/api` segment and a trailing slash. Responses use `Content-Type: application/json` and `Cache-Control: no-store`. The decoded UTF-8 body limit remains 2048 bytes. Error codes and HTTP statuses remain those in section 5; internal errors use the fixed public message `internal error`.
 
@@ -947,3 +947,24 @@ Each feasibility violation contains transformer_id (non-null string identifier),
 | `alternatives` | array of objects | none | no | Existing section 3.8 alternative schema for tested uncontrolled/managed modes at chosen level (or first rejected increment) |
 
 Reason codes: selected_priority_headroom, electrical_constraint, baseline_violation, site_ineligible, zero_demand, target_budget_exhausted. Codes describe the condition when that site was processed; a later placement may consume further shared headroom. Unplaced target is separate from individual candidate shortfalls. Scores and diagnostic floats round only at presentation to four decimals; INR uses ties-to-even integer rounding. Existing regressions are unchanged. Results are planning estimates, not siting/land availability evidence, appliance damage predictions, or interconnection approvals.
+
+## 13. M11 versioned HTTP API integration
+
+The document remains contract v3; `/v2` denotes the HTTP namespace, not a replacement engine schema. API Gateway HTTP API payload 2.0 calls the existing `handler.lambda_handler`. One optional `/api` segment and trailing slash are accepted. Existing `/scenarios` and `/simulate` remain unchanged; neighbourhood resource names retain their established short forms. No additional response envelope or decision rounding is introduced.
+
+| Method | Versioned path | Unversioned alias | Body | HTTP 200 response |
+|---|---|---|---|---|
+| GET | `/v2/health` | `/health` | none | `{status: "ok", api_version: "v2", engine_version: string}`; all fields non-null, unit none |
+| GET | `/v2/scenarios` | `/scenarios` | none | Section 3.1 unchanged |
+| POST | `/v2/simulate` | `/simulate` | Section 2 scenario | Section 4 unchanged |
+| GET | `/v2/network` | `/network` | none | Section 3.4 topology |
+| POST | `/v2/assess` | `/assess` | `{allocation: [...]}` | M7 section 3.7 implemented response; month/household/hosting placeholders remain null |
+| POST | `/v2/impact` | `/impact` | `{allocation: [...]}` | M8 section 10 response |
+| POST | `/v2/hosting` | `/hosting` | Exact empty object `{}` | M9 section 11 response; no scenario overrides |
+| POST | `/v2/plan` | `/plan` | `{target_kw: integer}` | M10 section 12 response, retaining section 3.8 fields |
+
+`/optimize` and `/dispatch`, including versioned forms, remain 404 not_found; no dispatch is implemented. GET responses do not consume a body. POST bodies must be strict JSON: duplicate object members, non-finite numeric tokens and overflowed numbers are rejected. All POST bodies are required, even the empty hosting object. The existing decoded UTF-8 limit of 2048 bytes and section 5 error/status mapping are preserved: invalid requests (including oversize) 400, unknown routes 404, wrong methods 405, solver errors 500 convergence_failed, unexpected/configuration failures 500 internal_error with fixed message "internal error". Request ids/scenarios unsupported by an operation are rejected as unknown fields; allocation site ids must exist and be unique. A request cannot override configured transformer equipment or representative network days.
+
+All responses have Content-Type application/json and Cache-Control no-store. OPTIONS on a known available route returns 204 with an empty body, Access-Control-Allow-Methods GET, POST, OPTIONS and Access-Control-Allow-Headers Content-Type. `GRIDMIND_ALLOWED_ORIGINS` is a JSON list of exact HTTP(S) origins, default `[]` (same-origin access only). Only an approved supplied Origin is reflected; credentialed CORS is not enabled. A disallowed Origin or preflight method/header returns 400 invalid_input naming origin/method/headers. Configured allowlists add Vary: Origin. No approved production frontend origin or deployed URL is inferred.
+
+Health means the application can import and load its bundled configuration, not that AWS dependencies, all simulation cases or real telemetry were checked. Config loads once per process from GRIDMIND_CONFIG_DIR or config beside the packaged handler; the repository config directory remains the local fallback. No result cache or precomputation is added. Logs retain one structured request record; internal tracebacks stay in logs and are never returned to clients. Model outputs and all engineering limitations in sections 10–12 apply unchanged.

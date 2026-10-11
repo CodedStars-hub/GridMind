@@ -50,3 +50,15 @@ With `.venv` active, run from the repository root:
 python scripts/invoke_local.py lambda/events/simulate_default.json --summary
 ```
 Use `get_scenarios.json --pretty` to inspect the choices and assumptions. This handler is local only.
+
+## API v2 (local preparation)
+
+The existing handler exposes `/v2/health`, `/v2/scenarios`, `/v2/network`, `/v2/simulate`, `/v2/assess`, `/v2/impact`, `/v2/hosting` and `/v2/plan`; see [the API contract](docs/api-contract.md#13-m11-versioned-http-api-integration). No live API URL is verified.
+
+```bash
+.venv/bin/python scripts/invoke_local.py lambda/events/v2_health.json --pretty
+.venv/bin/python scripts/invoke_local.py lambda/events/v2_assess.json --pretty
+.venv/bin/python scripts/package_api.py
+```
+
+Deployment requires separate approval; see [the infrastructure review](infra/README.md). Model results are illustrative, hosting excludes shared upstream constraints, and placement is a deterministic heuristic rather than a guaranteed optimum. No real-time telemetry is implemented.
