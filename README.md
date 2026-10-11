@@ -436,14 +436,20 @@ Authoritative engineering specifications, mathematical proofs, and deployment ru
 
 | Document | Purpose & Scope |
 | :--- | :--- |
+| 🏆 [**Judges & Evaluator Guide**](docs/JUDGES_GUIDE.md) | 3-minute video breakdown, rubric mapping (Waste & Energy track), and live cloud endpoint testing |
+| 🌱 [**Environmental Impact Assessment**](docs/ENVIRONMENTAL_IMPACT.md) | Quantified asset waste reduction (avoided copper/steel/oil scrap) and renewable hosting expansion |
 | 📖 [**API Contract v3**](docs/api-contract.md) | Single source of truth for all request/response schemas, enums, units, and error codes |
 | 📐 [**Engineering Methodology**](docs/methodology.md) | Mathematical derivations of AC power flow, IEEE C57.91 thermal state updates, and $F_{\text{AA}}$ |
 | 🔬 [**Assumptions & Parameters**](docs/assumptions.md) | Comprehensive citations, standards references, and justifications for all physical parameters |
+| 🏗️ [**System & Cloud Architecture**](docs/ARCHITECTURE.md) | Single-origin CloudFront design, serverless Lambda execution, and edge resilience model |
+| 🔌 [**API v2 Reference Guide**](docs/API_REFERENCE.md) | Complete reference guide for all 8 `/v2` endpoints with live curl examples |
+| ❓ [**Frequently Asked Questions (FAQ)**](docs/FAQ.md) | Engineering answers on Python standard library, avoiding black-box ML, and thermal stability |
+| 🧪 [**Verification Runbook**](docs/VERIFICATION_RUNBOOK.md) | End-to-end reproduction guide for local tests, Lambda invokers, frontend gates, and live AWS calls |
 | 📋 [**Product Requirements (PRD)**](planning/product-requirement.md) | Problem statement, user personas, core user journeys, and feature boundaries |
-| 🏗️ [**System Architecture**](planning/architecture.md) | Single-origin CloudFront design, serverless Lambda execution, and edge resilience model |
-| 🚀 [**Implementation Plan**](planning/implementationplan.md) | Milestone roadmap (M1–M13) from physics foundations to network explorer |
+| 🗺️ [**Implementation Plan**](planning/implementationplan.md) | Milestone roadmap (M1–M13) from physics foundations to network explorer |
 | 💻 [**Frontend Architecture**](frontend/README.md) | React 19 setup, local Vite proxy configuration, and verification runbooks |
 | ☁️ [**AWS Infrastructure Guide**](infra/README.md) | AWS SAM template specifications, IAM least-privilege policies, and deployment steps |
+| 📂 [**Master Docs Index**](docs/README.md) | Categorized directory index of all documentation files |
 
 ---
 
