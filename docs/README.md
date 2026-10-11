@@ -1,4 +1,4 @@
-﻿# GridMind Technical Documentation Directory
+# GridMind Technical Documentation Directory
 
 Authoritative engineering, mathematical, cloud architectural, and hackathon evaluation documentation for the GridMind digital twin.
 
@@ -22,8 +22,9 @@ Authoritative engineering, mathematical, cloud architectural, and hackathon eval
 
 ## 3. Architecture & Cloud Infrastructure
 - 🏗️ [**System & Cloud Architecture**](ARCHITECTURE.md): Single-origin CloudFront design, serverless Lambda execution, AWS IoT Core dispatch, and S3 edge fallback.
+- ☁️ [**AWS Cloud Architecture & Implementation Guide**](AWS_ARCHITECTURE.md): Deep dive on AWS services used, concrete benefits, competitive evaluation (vs. GCP/Azure), and SAM deployment.
 - 🔌 [**API v2 Reference Guide**](API_REFERENCE.md): Detailed specification of all 8 production `/v2` endpoints with example curl commands.
-- ☁️ [**AWS Infrastructure Guide**](../infra/README.md): AWS SAM CloudFormation template review, IAM permissions, and deployment procedures.
+- ⚙️ [**AWS SAM Infrastructure Review**](../infra/README.md): AWS SAM CloudFormation template review, IAM permissions, and deployment procedures.
 
 ---
 

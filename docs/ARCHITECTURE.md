@@ -12,6 +12,8 @@ GridMind is engineered as a **lean, deterministic, serverless system running nat
 3. **Resilience by Precomputation**: Because the baseline single-transformer parameter space is finite (144 permutations), all baseline results are precomputed and published to S3, providing a zero-downtime client-side fallback if network or API failures occur.
 4. **Standard Library Only**: Eliminates heavy binary layers (NumPy/SciPy), keeping Lambda deployment packages under 1 MB and cold starts strictly under 300 ms.
 
+> ☁️ **AWS Hackathon Reference**: For an in-depth breakdown of each AWS service used, how they helped us, and a direct comparative analysis against Google Cloud and Microsoft Azure, read the [**AWS Cloud Architecture Guide**](AWS_ARCHITECTURE.md).
+
 ---
 
 ## 2. High-Level AWS Topology

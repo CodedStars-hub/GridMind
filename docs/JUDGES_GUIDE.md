@@ -1,4 +1,4 @@
-﻿# GridMind - Hackathon Judge & Evaluator Guide
+# GridMind - Hackathon Judge & Evaluator Guide
 
 **WeMakeDevs Environmental Hacks 2026** · **Track: Waste & Energy**  
 *Evaluating GridMind among 9,000+ Participants.*
@@ -26,7 +26,7 @@ Across cities in India and developing nations, distribution utilities (DISCOMs) 
 | :--- | :--- | :--- | :--- |
 | **Idea & Real-World Impact** | 30% | Targets physical waste of distribution assets and energy grid bottlenecks in developing nations. Unlocks rooftop solar & EV hosting capacity without ₹5-7L capital waste. | Detailed in [docs/ENVIRONMENTAL_IMPACT.md](ENVIRONMENTAL_IMPACT.md) and [PRD](../planning/product-requirement.md). |
 | **Technical Rigor & Physics** | 25% | Standard-library Python engine solving exact radial AC power flow, IEEE C57.91 analytic exponential updates, and Arrhenius aging ($F_{\text{AA}}$). Zero hallucinations. | 100% reproducible tests in [engine/tests/](../engine/tests/); derivations in [docs/methodology.md](methodology.md). |
-| **AWS Cloud Architecture** | 25% | AWS SAM stack deployed in `ap-south-1` (Mumbai). HTTP API Gateway v2, Lambda (Python 3.12, <40 ms warm), S3 edge fallback, and AWS IoT Core MQTT dispatch. | Live endpoint at `/v2/health`; CloudFormation template in [infra/template.json](../infra/template.json). |
+| **AWS Cloud Architecture** | 25% | AWS SAM stack deployed in `ap-south-1` (Mumbai). HTTP API Gateway v2, Lambda (Python 3.12, <40 ms warm), S3 edge fallback, and AWS IoT Core MQTT dispatch. | Live endpoint at `/v2/health`; CloudFormation template in [infra/template.json](../infra/template.json); complete cloud guide in [docs/AWS_ARCHITECTURE.md](AWS_ARCHITECTURE.md). |
 | **Design, UX & Craft** | 20% | Executive engineering dashboard built with React 19, strict TypeScript, and Tailwind CSS v4. Interactive SVG network topology explorer and responsive charts. | Frontend code in [frontend/src/](../frontend/src/) and verified locally via `npm run dev`. |
 
 ---
