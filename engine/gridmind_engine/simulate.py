@@ -1,9 +1,11 @@
 """Pure daily orchestration, rounded chart data, alerts and no-battery verdicts."""
 
+from copy import deepcopy
 from dataclasses import asdict
+import math
 
 from . import __version__, aging, powerflow, thermal
-from .profiles import build_load_series
+from .profiles import MINUTES_PER_HOUR, LoadSeries, _timing, build_load_series
 from .validate import validate_request
 
 # Carry thermal state through two days and report only the final day.
@@ -98,7 +100,31 @@ def simulate_day(inputs, config):
     """Report the last of two daily passes; temperatures are end-of-step values."""
     if inputs.bess_override is not None or inputs.bess != 'off':
         raise NotImplementedError('battery simulation is added in M8')
-    loads = build_load_series(inputs, config)
+    return simulate_load_series(build_load_series(inputs, config), config, asdict(inputs))
+
+
+def simulate_load_series(loads: LoadSeries, config: dict, input_echo: dict) -> dict:
+    """Run the shared physics on supplied powers; preserve legacy output semantics.
+
+    This internal engine interface bypasses request enums, not numerical checks.
+    Network callers supply their aggregate charging series and a documented echo.
+    """
+    step_minutes, steps = _timing(config)
+    expected_time = tuple(f'{i * step_minutes // MINUTES_PER_HOUR:02d}:{i * step_minutes % MINUTES_PER_HOUR:02d}'
+                          for i in range(steps))
+    if tuple(loads.time) != expected_time:
+        raise ValueError('LoadSeries.time must match the configured daily time axis')
+    for name in ('ambient_c', 'base_kw', 'ev_kw', 'pv_kw'):
+        values = getattr(loads, name)
+        if len(values) != steps:
+            raise ValueError(f'LoadSeries.{name} must contain {steps} samples')
+        for value in values:
+            try:
+                valid = type(value) in (int, float) and math.isfinite(value)
+            except OverflowError:
+                valid = False
+            if not valid or (name != 'ambient_c' and value < 0):
+                raise ValueError(f'LoadSeries.{name} must contain finite valid samples')
     flow_params = powerflow.powerflow_params_from_config(config['transformer'])
     thermal_params = thermal.thermal_params_from_config(config['transformer'])
     aging_params = aging.aging_params_from_config(config['limits'])
@@ -132,7 +158,7 @@ def simulate_day(inputs, config):
     summary = _summary(series, step_minutes, aging_params)
     alerts = detect_alerts(series['time'], series['voltage_pu'], series['loading_pct'], series['hotspot_c'], config['limits'])
     return {
-        'meta': dict(inputs=asdict(inputs), engine_version=__version__, source='live'),
+        'meta': dict(inputs=deepcopy(input_echo), engine_version=__version__, source='live'),
         'series': series, 'summary': summary, 'alerts': alerts,
         'verdict': _verdict(alerts, config['limits']), 'bess': None, 'cost': None,
     }
