@@ -46,3 +46,11 @@ Explain representative days, simplified equipment and appliance behaviour, missi
 
 List primary engineering references and distinguish supplied assumptions from verified sources. Document in M6.
 
+
+## M7 assessment implementation
+
+`assess_network(payload, config)` validates the allocation, selects residential/commercial/mixed base profiles and evening/daytime charging profiles, and aggregates site powers onto their configured transformer. Missing sites contribute zero charging. Configuration errors raise ValueError; malformed requests raise InvalidInputError naming the field; shared power-flow failures propagate without a partial assessment.
+
+`simulate_load_series(loads, config, input_echo)` is the shared daily orchestration interface; `simulate_day` and `run_simulation` keep their existing public signatures and behaviour. The refactor changes no physics. Six full-result fixtures captured before the refactor preserve supported single-transformer outputs, including time series, metadata, rounding, alerts and verdicts. Both network representative days use that same routine.
+
+Coincident charging peak and integrated daily energy use aligned full-precision served site powers, with final rounding only. Worst hot-spot is the maximum over every transformer and both days; status counts count each transformer once. Voltage stays associated with the branch's series and summary. No network-average insulation aging, monthly depreciation, household indicators or hosting search is introduced. These results remain illustrative planning calculations requiring site-specific calibration.

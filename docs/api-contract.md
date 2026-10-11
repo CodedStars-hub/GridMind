@@ -154,7 +154,7 @@ Network assumptions cover neighbourhood, transformer, limits, costs, bess and lo
 | `source` | string | enum | no | live or cached |
 | `inputs` | object | none | no | Exact normalized request body; empty object for GET /network |
 
-This meta belongs to /network, /assess, /plan and /dispatch. Nested single-transformer simulation meta remains exactly section 4. Neighbourhood charging totals need not match the legacy ev_kw enums; how the later assessment adapter echoes its aggregate inputs is deferred to its implementation milestone, without changing section 4 in M5.
+This meta belongs to /network, /assess, /plan and /dispatch. Nested single-transformer simulation meta remains exactly section 4. Neighbourhood charging totals need not match the legacy ev_kw enums; M7 nested simulation meta uses the same six input keys: ev_kw is the sum of allocated site ratings (not necessarily a legacy enum), pv_kwp is zero because the neighbourhood defines no PV installation, day_type and load_level identify the branch scenario, bess is off and bess_override is null. Managed charging is described by the outer meta.inputs.allocation; series.ev_kw is the actual served load. Legacy /simulate validation and echoes are unchanged.
 
 ### 3.6 Allocation
 
@@ -168,6 +168,12 @@ This meta belongs to /network, /assess, /plan and /dispatch. Nested single-trans
 An allocation is an array of these objects, at most one per site. Omitted sites receive zero charging. Transformer EV load is the sum of the served site profiles attached to it. Empty allocation is valid. Battery and upgrade remedy effects belong to the planning assessment, not extra allocation fields.
 
 ### 3.7 POST /assess
+
+M7 engine assessment implements both representative days and the unchanged simulation shape. `month` and `household` are null until M8; `hosting` is null until M9. Totals dependent on those features (`life_consumed_days_per_month`, `depreciation_inr_per_month`, `connections_affected`, `customer_hours_per_month`, `worst_min_voltage_v`) are present as null, never fabricated zeros. Their tables below describe later populated values. No HTTP handler is added in M7.
+
+The current configuration explicitly assigns the shared transformer.json nameplate and electrical parameters to every branch; profiles, load levels, site loads and thermal states remain branch-specific. No individual equipment overrides are defined. Voltage profiles retain transformer_id association; these branches are not a coupled multi-node feeder.
+
+Served peak and energy are computed from full-precision served site powers on aligned weekday steps, then rounded to four decimals. `served_kw_peak` is charging-only coincident peak, not total neighbourhood demand or a sum of separate transformer peaks. Aging is reported separately for every transformer/day and is not averaged. Managed allocations apply the supplied cap and redistribution only; M7 does not select caps or enforce a planner feasibility verdict.
 
 | Field | Type | Unit | Nullable | Meaning |
 |---|---|---|---|---|
@@ -187,11 +193,11 @@ Transformer assessment T
 | `status` | string | enum | no | healthy, watch, overloaded |
 | `simulation` | object | none | no | Full unchanged section 4 result for summer_weekday |
 | `weekend_summary` | object | none | no | Exactly section 4.3 summary for weekend |
-| `month` | object | none | no | Monthly projection below |
-| `household` | object | none | no | Household indicators below |
-| `hosting` | object | none | no | Capacity estimates below |
+| `month` | object or null | none | yes | Monthly projection below |
+| `household` | object or null | none | yes | Household indicators below |
+| `hosting` | object or null | none | yes | Capacity estimates below |
 
-Classify each day as overloaded if any hotspot_critical alert exists or peak_loading_pct > 100; otherwise watch if any other warning-severity alert exists; otherwise healthy. T.status is the worse of summer_weekday and weekend, ordered healthy < watch < overloaded. The simulation verdict is preserved and is distinct from this neighbourhood status.
+Classify each day as overloaded if any hotspot_critical alert exists or peak_loading_pct exceeds the configured loading_info_pct (currently 100); otherwise watch if any other warning-severity alert exists; otherwise healthy. T.status is the worse of summer_weekday and weekend, ordered healthy < watch < overloaded. The simulation verdict is preserved and is distinct from this neighbourhood status.
 
 Monthly projection
 
@@ -238,12 +244,12 @@ Assessment totals
 
 | Field | Type | Unit | Nullable | Meaning |
 |---|---|---|---|---|
-| `life_consumed_days_per_month` | number | equivalent life days/month | no | Sum of transformer month.life_consumed_days |
-| `depreciation_inr_per_month` | integer | INR/month | no | Sum of transformer month.depreciation_inr |
+| `life_consumed_days_per_month` | number or null | equivalent life days/month | yes | Sum of transformer month.life_consumed_days |
+| `depreciation_inr_per_month` | integer or null | INR/month | yes | Sum of transformer month.depreciation_inr |
 | `transformers_in_violation` | integer | transformers | no | Count with status watch or overloaded |
-| `connections_affected` | integer | customers | no | Sum connections for transformers with any voltage_low alert on either day |
-| `customer_hours_per_month` | number | customer-h/month | no | Sum of household monthly exposures |
-| `worst_min_voltage_v` | number | V | no | Lowest minimum on either day across transformers, scaled to nominal household volts |
+| `connections_affected` | integer or null | customers | yes | Sum connections for transformers with any voltage_low alert on either day |
+| `customer_hours_per_month` | number or null | customer-h/month | yes | Sum of household monthly exposures |
+| `worst_min_voltage_v` | number or null | V | yes | Lowest minimum on either day across transformers, scaled to nominal household volts |
 | `worst_hotspot_c` | number | °C | no | Highest hot-spot on either day across transformers |
 | `served_kw_peak` | number | kW | no | Peak of the simultaneous served charging sum over sites on the representative weekday |
 | `served_energy_kwh_per_day` | number | kWh/weekday | no | Sum of served site charging samples × step_minutes / 60 on summer_weekday |
