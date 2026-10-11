@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "gridmind-api-v2"
+resolve_s3 = true
+s3_prefix = "gridmind-api-v2"
+region = "ap-south-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "AllowedOriginsJson=\"[]\""
+image_repositories = []
+
+[default.global.parameters]
+region = "ap-south-1"
