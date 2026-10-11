@@ -879,3 +879,71 @@ Each margin has `constraint` (non-null string, exact config key), `value` (non-n
 | `independent_unmanaged_kw` | integer | kW | no | Sum of independent uncontrolled capacities; not a validated simultaneous upstream network capacity |
 
 Every branch currently shares the nameplate/electrical config by explicit topology assumption; own load archetype, level, charging timing and thermal state are retained. No individual equipment overrides exist. The sum does not evaluate a shared upstream feeder, source loading or inter-transformer voltage coupling. Results are scenario-dependent planning estimates, not utility interconnection approval or a full feeder study.
+
+## 12. M10 engine placement planner
+
+`plan_charging(payload, config)` implements the section 3.8 request `{target_kw}` locally, without an HTTP adapter. Targets come from target_kw_options; exact integers only, unknown keys rejected. Existing M7, M8 and M9 interfaces and response shapes are unchanged. The four section 3.8 members remain present; the following diagnostic members are additive.
+
+The total-demand budget is profile-scale kW, not a financial budget, charger count or hardware nameplate recommendation. A site's max_kw is its existing candidate ceiling; optional requested_kw (non-negative integer block multiple, <= max_kw) defaults to that ceiling. Optional eligible (boolean) defaults to true because the site is a configured candidate, **not** because availability/permits were verified. These optional members are nested in neighbourhood sites and share the illustrative sites assumption note. Invalid ids, references, demand, scores, weights, targets and numerical budgets are rejected with clear errors. Missing footfall is rejected, never estimated.
+
+Demand attractiveness = footfall_score / planner_footfall_max_score × planner_score_weights.footfall. Only footfall is supported; the positive weight is illustrative, not scientifically validated. The score ceiling is configured; scoring cannot bypass electrical constraints. Rank descending full-precision score, ties by site_id ascending. Commercial/mixed archetype determines demand profiles, not a fabricated activity score. Configured eligibility and baseline electrical eligibility are reported separately.
+
+For each ranked eligible site on a compliant branch, exhaust all allocation_block_kw levels through min(requested_kw, remaining target), testing uncontrolled demand and each configured managed fraction. Keep earlier selected sites fixed, combine all proposed served site profiles on the same transformer, and run the shared engine on both days. Select greatest feasible allocated profile scale; ties choose lowest known controller cost, then highest sum of the two days' served energy, then highest cap fraction. No monotonicity or global optimality is assumed. planner_max_evaluations bounds combined two-day candidate evaluations and must cover sum(min(site requested_kw, target_kw)/block) × (1 + number of caps). Current budget 285 covers all current ceilings/modes. M9 capacities supply baseline compliance and contextual headroom; they are not independently assigned to every site or used instead of actual combined feasibility. Site profiles all inherit their transformer's ev_usage; site-specific temporal shapes are unsupported.
+
+Unrounded operating checks reuse M9's configured boundaries and equality policy. Each managed site's energy must meet min_served_energy_pct_for_managed on each day. Non-convergent candidates are infeasible; configuration errors propagate. Already-violating branches receive no additional allocation. The final combined network is independently rerun and its raw series checked. additional_allocations_feasible can be true while whole_neighbourhood_feasible is false because unchanged baseline violations remain; this is explicitly reported, never claimed to be full compliance.
+
+`baseline` retains the exact label **Unplanned installation (modelled)** and fills eligible candidates by descending footfall then id, up to max_kw and target, uncontrolled, without electrical screening. It is a reference deployment, **not** existing demand. Optional requested_kw constrains recommendations only; the established reference still fills candidate ceilings. `existing` is the zero-proposed-EV case. `before_after` compares existing to planned demand using M8; `comparison` compares the unplanned reference to the plan as in section 3.8. Different site/profile mixtures can yield different served energy at equal placed profile-scale kW. No claim that every impact improves is made.
+
+Planner-only assessment copies populate section 3.7 totals from unrounded M8 integration/exposure and shared raw series, then round once at presentation. Life days sum reference-equivalent transformer aging hours divided by configured calendar-day hours; depreciation is the M8 illustrative value proxy. Customer-hours and connections_affected use voltage-low steps on both days (count each transformer group once), unlike M8's broader outside-either-limit exposure. Worst voltage/hot-spot are extrema, and served charging peak sums coincident weekday steps. Planner T.status uses unrounded limits; nested simulation charts/alerts remain unchanged. T.hosting contains M9's contextual capacities; T.month and T.household remain null: detailed life and exposure are in before_after.impact, with no new appliance or life-expectancy predictions.
+
+Only none and managed_charging modes are evaluated at a site. Earlier placements are not backtracked; reallocate, battery and upgrade alternatives are explicitly not evaluated and cannot win (feasible false, cost null, reason identifies this limitation). This M10 implementation does not implement the full future remedy ladder or BESS sizing. Controller costs are charged once per managed site from config. A configured non-null new_connection_cost_inr_per_kw is applied to placed profile-scale kW; null remains the existing explicitly uncosted zero placeholder. Hardware/installation quotes and capital-expenditure budgets are unsupported. Payback in section 3.8 is illustrative proxy arithmetic, not guaranteed cash savings.
+
+| Additional response field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `existing` | object | none | no | Zero-proposed-EV scenario |
+| `existing.description` | string | none | no | Existing demand without proposed EV charging |
+| `existing.assessment` | object | none | no | Planner assessment copy, section 3.7 |
+| `before_after` | object | none | no | Existing-to-plan comparisons below |
+| `before_after.impact` | object | mixed | no | Exactly section 10 impact object; baseline=existing, ev=planned; includes per-day/monthly life, valuation and household proxies plus totals |
+| `before_after.electrical` | array of objects | none | no | One transformer per configured order |
+| `before_after.feasibility` | object | none | no | Final compliance diagnostics below |
+| `planning` | object | none | no | Algorithm and candidate explanations |
+| `planning.algorithm` | string | identifier | no | footfall_greedy_discrete_v1 |
+| `planning.sites` | array of objects | none | no | Every candidate in full-precision ranking order |
+| `planning.selected_site_ids` | array of strings | identifiers | no | Positive allocations in selection order |
+| `planning.evaluations` | integer | two-day candidate evaluations | no | Combined site-level evaluations; excludes M9 search and final scenario runs |
+| `assumptions` | array of objects | none | no | Existing name/value/unit/note schema: M9 assumptions plus neighbourhood and cost settings; no profile arrays |
+| `limitations` | array of strings | none | no | Heuristic, scenario, profile, upstream, valuation and availability limitations |
+
+Electrical comparison item has transformer_id (non-null string identifier) and days (non-null object with exactly summer_weekday and weekend). Each day has before, after, delta (non-null objects), each containing min_voltage_pu (number, p.u.), peak_loading_pct (number, % rated current), peak_hotspot_c (number, °C); none are nullable. Delta is after minus before, computed before rounding. M8 supplies aging/exposure comparisons alongside these extrema.
+
+| Feasibility field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `additional_allocations_feasible` | boolean | none | no | All allocated branches pass both days; managed energy checked during allocation |
+| `whole_neighbourhood_feasible` | boolean | none | no | No transformer violates an operational constraint |
+| `baseline_violations` | array of objects | none | no | Existing violations |
+| `final_violations` | array of objects | none | no | Planned network violations |
+
+Each feasibility violation contains transformer_id (non-null string identifier), scenario (non-null string day identity) and constraint (non-null string exact limits key). A failed final network simulation propagates PowerFlowError, rather than returning unsupported partial physics results.
+
+| Candidate field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `site_id` | string | identifier | no | Configured candidate |
+| `name` | string | none | no | Configured label |
+| `transformer_id` | string | identifier | no | Fixed association, never reassigned |
+| `requested_kw` | integer | uncontrolled profile-scale kW | no | Requested recommendation ceiling |
+| `eligible` | boolean | none | no | Configured candidate availability flag, not verified permitting |
+| `electrically_eligible` | boolean | none | no | Existing associated transformer passes both days |
+| `score` | number | relative score | no | Weighted normalized footfall |
+| `score_components` | object | none | no | footfall (number, configured score), normalized_footfall (number, fraction), footfall_weight (number, relative weight); all non-null |
+| `allocated_kw` | integer | uncontrolled profile-scale kW | no | Recommended additional demand scale, not installed hardware capacity |
+| `unserved_kw` | integer | profile-scale kW shortfall | no | requested_kw minus allocated_kw; **not** unserved kWh |
+| `status` | string | enum | no | selected (request met), partial (positive below request), rejected (zero) |
+| `managed` | boolean | none | no | Recommended managed mode |
+| `cap_fraction` | number or null | fraction | yes | Configured cap, null for uncontrolled/rejected |
+| `reason_code` | string | enum | no | Codes below |
+| `reason` | string | none | no | Concise plain-English explanation |
+| `limiting_constraints` | array of objects | none | no | scenario and constraint, non-null strings; union of failed next-grid modes, or baseline violations; may be empty |
+| `alternatives` | array of objects | none | no | Existing section 3.8 alternative schema for tested uncontrolled/managed modes at chosen level (or first rejected increment) |
+
+Reason codes: selected_priority_headroom, electrical_constraint, baseline_violation, site_ineligible, zero_demand, target_budget_exhausted. Codes describe the condition when that site was processed; a later placement may consume further shared headroom. Unplaced target is separate from individual candidate shortfalls. Scores and diagnostic floats round only at presentation to four decimals; INR uses ties-to-even integer rounding. Existing regressions are unchanged. Results are planning estimates, not siting/land availability evidence, appliance damage predictions, or interconnection approvals.

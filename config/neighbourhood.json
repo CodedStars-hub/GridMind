@@ -163,6 +163,21 @@
       "unit": "kW",
       "assumption": "assumption: illustrative discrete allocation block; editable planning input"
     },
+    "planner_score_weights": {
+      "value": {"footfall": 1},
+      "unit": "relative weight",
+      "assumption": "assumption: illustrative footfall-only demand priority; not a scientifically validated suitability score"
+    },
+    "planner_footfall_max_score": {
+      "value": 10,
+      "unit": "score",
+      "assumption": "assumption: illustrative normalization ceiling matching existing footfall scores; not measured traffic"
+    },
+    "planner_max_evaluations": {
+      "value": 285,
+      "unit": "combined transformer candidate evaluations per plan; each covers both days",
+      "assumption": "assumption: illustrative numerical budget; covers 570 kW of current site ceilings in 10 kW blocks for uncontrolled and four managed modes; increase with site ceilings or modes"
+    },
     "hosting_search_max_kw": {
       "value": 300,
       "unit": "kW",
