@@ -1,0 +1,590 @@
+{
+  "meta": {
+    "engine_version": "0.1.0",
+    "source": "live",
+    "inputs": {
+      "target_kw": 150
+    }
+  },
+  "comparison": {
+    "target_kw": 150,
+    "placed_kw_baseline": 150,
+    "placed_kw_plan": 150,
+    "served_energy_kwh_per_day_baseline": 1652.25,
+    "served_energy_kwh_per_day_plan": 1652.25,
+    "served_pct_of_baseline": 100.0,
+    "deltas": {
+      "life_consumed_days_per_month": -105.4461,
+      "depreciation_inr_per_month": -7733,
+      "customer_hours_per_month": -14430.0,
+      "connections_affected": -60,
+      "worst_min_voltage_v": 3.2988,
+      "worst_hotspot_c": -33.9811,
+      "transformers_in_violation": -1
+    },
+    "net": {
+      "damage_avoided_inr_per_month": 7733,
+      "plan_cost_inr": 50000,
+      "payback_months": 6.466
+    }
+  },
+  "planning": {
+    "algorithm": "footfall_greedy_discrete_v1",
+    "sites": [
+      {
+        "site_id": "S1",
+        "name": "Metro Station Plaza",
+        "transformer_id": "T4",
+        "requested_kw": 150,
+        "eligible": true,
+        "score": 1.0,
+        "score_components": {
+          "footfall": 10,
+          "normalized_footfall": 1.0,
+          "footfall_weight": 1
+        },
+        "allocated_kw": 130,
+        "unserved_kw": 20,
+        "status": "partial",
+        "limiting_constraints": [
+          {
+            "scenario": "summer_weekday",
+            "constraint": "hotspot_warning_c"
+          },
+          {
+            "scenario": "summer_weekday",
+            "constraint": "loading_info_pct"
+          },
+          {
+            "scenario": "summer_weekday",
+            "constraint": "voltage_min_pu"
+          },
+          {
+            "scenario": "weekend",
+            "constraint": "hotspot_critical_c"
+          },
+          {
+            "scenario": "weekend",
+            "constraint": "hotspot_warning_c"
+          },
+          {
+            "scenario": "weekend",
+            "constraint": "loading_info_pct"
+          },
+          {
+            "scenario": "weekend",
+            "constraint": "voltage_min_pu"
+          },
+          {
+            "scenario": "summer_weekday",
+            "constraint": "min_served_energy_pct_for_managed"
+          },
+          {
+            "scenario": "weekend",
+            "constraint": "min_served_energy_pct_for_managed"
+          }
+        ],
+        "alternatives": [
+          {
+            "type": "none",
+            "feasible": false,
+            "cost_inr": 0,
+            "reason": "Combined operating or energy constraints violated."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": false,
+            "cost_inr": 50000,
+            "reason": "Combined operating or energy constraints violated."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": true,
+            "cost_inr": 50000,
+            "reason": "Feasible tested mode."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": false,
+            "cost_inr": 50000,
+            "reason": "Combined operating or energy constraints violated."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": false,
+            "cost_inr": 50000,
+            "reason": "Combined operating or energy constraints violated."
+          }
+        ],
+        "managed": true,
+        "cap_fraction": 0.6,
+        "electrically_eligible": true,
+        "reason_code": "electrical_constraint",
+        "reason": "Further allocation fails combined transformer or managed-energy constraints."
+      },
+      {
+        "site_id": "S2",
+        "name": "Central Market North",
+        "transformer_id": "T3",
+        "requested_kw": 120,
+        "eligible": true,
+        "score": 0.9,
+        "score_components": {
+          "footfall": 9,
+          "normalized_footfall": 0.9,
+          "footfall_weight": 1
+        },
+        "allocated_kw": 20,
+        "unserved_kw": 100,
+        "status": "partial",
+        "limiting_constraints": [],
+        "alternatives": [
+          {
+            "type": "none",
+            "feasible": true,
+            "cost_inr": 0,
+            "reason": "Feasible tested mode."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": true,
+            "cost_inr": 50000,
+            "reason": "Feasible tested mode."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": true,
+            "cost_inr": 50000,
+            "reason": "Feasible tested mode."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": false,
+            "cost_inr": 50000,
+            "reason": "Combined operating or energy constraints violated."
+          },
+          {
+            "type": "managed_charging",
+            "feasible": false,
+            "cost_inr": 50000,
+            "reason": "Combined operating or energy constraints violated."
+          }
+        ],
+        "managed": false,
+        "cap_fraction": null,
+        "electrically_eligible": true,
+        "reason_code": "target_budget_exhausted",
+        "reason": "Only the remaining demand target could be allocated."
+      },
+      {
+        "site_id": "S4",
+        "name": "Hospital Visitor Parking",
+        "transformer_id": "T5",
+        "requested_kw": 60,
+        "eligible": true,
+        "score": 0.8,
+        "score_components": {
+          "footfall": 8,
+          "normalized_footfall": 0.8,
+          "footfall_weight": 1
+        },
+        "allocated_kw": 0,
+        "unserved_kw": 60,
+        "status": "rejected",
+        "limiting_constraints": [
+          {
+            "scenario": "summer_weekday",
+            "constraint": "hotspot_warning_c"
+          }
+        ],
+        "alternatives": [],
+        "managed": false,
+        "cap_fraction": null,
+        "electrically_eligible": false,
+        "reason_code": "baseline_violation",
+        "reason": "Existing transformer conditions require remediation."
+      },
+      {
+        "site_id": "S3",
+        "name": "Central Market Parking",
+        "transformer_id": "T3",
+        "requested_kw": 60,
+        "eligible": true,
+        "score": 0.7,
+        "score_components": {
+          "footfall": 7,
+          "normalized_footfall": 0.7,
+          "footfall_weight": 1
+        },
+        "allocated_kw": 0,
+        "unserved_kw": 60,
+        "status": "rejected",
+        "limiting_constraints": [],
+        "alternatives": [],
+        "managed": false,
+        "cap_fraction": null,
+        "electrically_eligible": true,
+        "reason_code": "target_budget_exhausted",
+        "reason": "Higher-priority sites used the configured demand target."
+      },
+      {
+        "site_id": "S5",
+        "name": "Apartment Complex Parking",
+        "transformer_id": "T6",
+        "requested_kw": 90,
+        "eligible": true,
+        "score": 0.6,
+        "score_components": {
+          "footfall": 6,
+          "normalized_footfall": 0.6,
+          "footfall_weight": 1
+        },
+        "allocated_kw": 0,
+        "unserved_kw": 90,
+        "status": "rejected",
+        "limiting_constraints": [],
+        "alternatives": [],
+        "managed": false,
+        "cap_fraction": null,
+        "electrically_eligible": true,
+        "reason_code": "target_budget_exhausted",
+        "reason": "Higher-priority sites used the configured demand target."
+      },
+      {
+        "site_id": "S6",
+        "name": "Block A Clubhouse",
+        "transformer_id": "T1",
+        "requested_kw": 60,
+        "eligible": true,
+        "score": 0.4,
+        "score_components": {
+          "footfall": 4,
+          "normalized_footfall": 0.4,
+          "footfall_weight": 1
+        },
+        "allocated_kw": 0,
+        "unserved_kw": 60,
+        "status": "rejected",
+        "limiting_constraints": [],
+        "alternatives": [],
+        "managed": false,
+        "cap_fraction": null,
+        "electrically_eligible": true,
+        "reason_code": "target_budget_exhausted",
+        "reason": "Higher-priority sites used the configured demand target."
+      },
+      {
+        "site_id": "S7",
+        "name": "Block B Community Park",
+        "transformer_id": "T2",
+        "requested_kw": 30,
+        "eligible": true,
+        "score": 0.3,
+        "score_components": {
+          "footfall": 3,
+          "normalized_footfall": 0.3,
+          "footfall_weight": 1
+        },
+        "allocated_kw": 0,
+        "unserved_kw": 30,
+        "status": "rejected",
+        "limiting_constraints": [],
+        "alternatives": [],
+        "managed": false,
+        "cap_fraction": null,
+        "electrically_eligible": true,
+        "reason_code": "target_budget_exhausted",
+        "reason": "Higher-priority sites used the configured demand target."
+      }
+    ],
+    "selected_site_ids": [
+      "S1",
+      "S2"
+    ],
+    "evaluations": 85
+  },
+  "limitations": [
+    "Reference-equivalent aging is not measured remaining life or a failure-date prediction.",
+    "The economic aging proxy is illustrative, not guaranteed expenditure or financial loss.",
+    "Connection-point voltage is a proxy for customer exposure; household service drops are not modelled.",
+    "Potential exposure does not establish appliance damage, repair costs or appliance failures.",
+    "Residential connection proxies cover residential archetypes only; mixed/commercial residential counts are unknown.",
+    "Each transformer is an independent branch; representative days are repeated, not a measured monthly forecast.",
+    "Resolution-limited estimate for the configured profiles and operating limits, not interconnection approval.",
+    "Independent transformer capacities do not validate simultaneous upstream network feasibility.",
+    "Managed scaling levels are not coincident demand or installed charger recommendations; see selected day peaks.",
+    "A violating baseline requires remediation; zero additional capacity does not make it compliant.",
+    "Equipment is shared explicitly by configuration; no individual equipment overrides are defined.",
+    "Footfall and candidate availability are illustrative, not measured traffic or permitting evidence.",
+    "All sites on a transformer share its EV usage profile; site-specific temporal profiles are unsupported.",
+    "Greedy priority with fixed earlier placements is not globally optimal; site ceilings are profile-scale bounds, not charger hardware sizes.",
+    "Only configured controller and connection costs are included; no capital-expenditure budget or hardware quote is modelled.",
+    "Legacy month and appliance-indicator household objects remain null; use before_after.impact for M8 life and exposure metrics."
+  ],
+  "plan": {
+    "unplaced_kw": 0,
+    "cost": {
+      "controllers_inr": 50000,
+      "battery_inr": 0,
+      "upgrade_inr": 0,
+      "connections_inr": 0,
+      "total_inr": 50000
+    }
+  },
+  "before_after": {
+    "electrical": [
+      {
+        "transformer_id": "T1",
+        "days": {
+          "summer_weekday": {
+            "before": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 85.7842
+            },
+            "after": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 85.7842
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          },
+          "weekend": {
+            "before": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 88.3386
+            },
+            "after": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 88.3386
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          }
+        }
+      },
+      {
+        "transformer_id": "T2",
+        "days": {
+          "summer_weekday": {
+            "before": {
+              "min_voltage_pu": 0.9693,
+              "peak_loading_pct": 59.7258,
+              "peak_hotspot_c": 72.9371
+            },
+            "after": {
+              "min_voltage_pu": 0.9693,
+              "peak_loading_pct": 59.7258,
+              "peak_hotspot_c": 72.9371
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          },
+          "weekend": {
+            "before": {
+              "min_voltage_pu": 0.9693,
+              "peak_loading_pct": 59.7258,
+              "peak_hotspot_c": 75.2293
+            },
+            "after": {
+              "min_voltage_pu": 0.9693,
+              "peak_loading_pct": 59.7258,
+              "peak_hotspot_c": 75.2293
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          }
+        }
+      },
+      {
+        "transformer_id": "T3",
+        "days": {
+          "summer_weekday": {
+            "before": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 93.3455
+            },
+            "after": {
+              "min_voltage_pu": 0.9567,
+              "peak_loading_pct": 84.6483,
+              "peak_hotspot_c": 100.5948
+            },
+            "delta": {
+              "min_voltage_pu": -0.0038,
+              "peak_loading_pct": 7.9356,
+              "peak_hotspot_c": 7.2493
+            }
+          },
+          "weekend": {
+            "before": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 92.4938
+            },
+            "after": {
+              "min_voltage_pu": 0.9563,
+              "peak_loading_pct": 85.5346,
+              "peak_hotspot_c": 100.5764
+            },
+            "delta": {
+              "min_voltage_pu": -0.0042,
+              "peak_loading_pct": 8.822,
+              "peak_hotspot_c": 8.0826
+            }
+          }
+        }
+      },
+      {
+        "transformer_id": "T4",
+        "days": {
+          "summer_weekday": {
+            "before": {
+              "min_voltage_pu": 0.9693,
+              "peak_loading_pct": 59.7258,
+              "peak_hotspot_c": 80.2862
+            },
+            "after": {
+              "min_voltage_pu": 0.953,
+              "peak_loading_pct": 94.0085,
+              "peak_hotspot_c": 109.9946
+            },
+            "delta": {
+              "min_voltage_pu": -0.0163,
+              "peak_loading_pct": 34.2827,
+              "peak_hotspot_c": 29.7085
+            }
+          },
+          "weekend": {
+            "before": {
+              "min_voltage_pu": 0.9693,
+              "peak_loading_pct": 59.7258,
+              "peak_hotspot_c": 78.7103
+            },
+            "after": {
+              "min_voltage_pu": 0.953,
+              "peak_loading_pct": 94.0085,
+              "peak_hotspot_c": 109.8708
+            },
+            "delta": {
+              "min_voltage_pu": -0.0163,
+              "peak_loading_pct": 34.2827,
+              "peak_hotspot_c": 31.1605
+            }
+          }
+        }
+      },
+      {
+        "transformer_id": "T5",
+        "days": {
+          "summer_weekday": {
+            "before": {
+              "min_voltage_pu": 0.9515,
+              "peak_loading_pct": 94.0364,
+              "peak_hotspot_c": 111.7571
+            },
+            "after": {
+              "min_voltage_pu": 0.9515,
+              "peak_loading_pct": 94.0364,
+              "peak_hotspot_c": 111.7571
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          },
+          "weekend": {
+            "before": {
+              "min_voltage_pu": 0.9515,
+              "peak_loading_pct": 94.0364,
+              "peak_hotspot_c": 108.826
+            },
+            "after": {
+              "min_voltage_pu": 0.9515,
+              "peak_loading_pct": 94.0364,
+              "peak_hotspot_c": 108.826
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          }
+        }
+      },
+      {
+        "transformer_id": "T6",
+        "days": {
+          "summer_weekday": {
+            "before": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 85.7842
+            },
+            "after": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 85.7842
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          },
+          "weekend": {
+            "before": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 88.3386
+            },
+            "after": {
+              "min_voltage_pu": 0.9605,
+              "peak_loading_pct": 76.7127,
+              "peak_hotspot_c": 88.3386
+            },
+            "delta": {
+              "min_voltage_pu": 0.0,
+              "peak_loading_pct": 0.0,
+              "peak_hotspot_c": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "feasibility": {
+      "additional_allocations_feasible": true,
+      "whole_neighbourhood_feasible": false,
+      "baseline_violations": [
+        {
+          "transformer_id": "T5",
+          "scenario": "summer_weekday",
+          "constraint": "hotspot_warning_c"
+        }
+      ],
+      "final_violations": [
+        {
+          "transformer_id": "T5",
+          "scenario": "summer_weekday",
+          "constraint": "hotspot_warning_c"
+        }
+      ]
+    }
+  }
+}

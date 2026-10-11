@@ -18,7 +18,7 @@ export function Empty({ title, children }: { title: string; children: ReactNode 
 }
 export function ErrorState({ error, retry }: { error: unknown; retry?: () => void }) {
   const message = error instanceof Error ? error.message : 'The request could not be completed.';
-  return <div className="error-state" role="alert"><strong>Data unavailable</strong><p>{message}</p>{error instanceof ApiError && error.field && <p>Field: {error.field}</p>}{retry && <button className="button secondary" onClick={retry}>Try again</button>}</div>;
+  return <div className="error-state" role="alert"><strong>{error instanceof ApiError && error.status === 429 ? 'The API is busy' : 'Data unavailable'}</strong><p>{message}</p>{error instanceof ApiError && error.status === 429 && <p>Please pause before trying again. Your request has not been replaced with estimated data.</p>}{error instanceof ApiError && error.field && <p>Field: {error.field}</p>}{retry && <button className="button secondary" onClick={retry}>Try again</button>}</div>;
 }
 export function ModelNote() {
   return <p className="model-note"><span aria-hidden="true">ⓘ</span> Planning-grade model. Configuration is illustrative; calculated results are not real-time measurements or interconnection approvals.</p>;

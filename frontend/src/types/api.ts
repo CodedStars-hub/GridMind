@@ -4,8 +4,9 @@ export type DayType = 'summer_weekday' | 'winter_weekday' | 'weekend';
 export type LoadLevel = 'moderate' | 'heavy' | 'critical';
 export type EvKw = 10 | 30 | 50 | 100;
 export type PvKwp = 0 | 10 | 20 | 30;
-export interface ScenarioRequest { ev_kw: EvKw; pv_kwp: PvKwp; day_type: DayType; load_level: LoadLevel }
-export interface ScenarioInputs extends ScenarioRequest { bess: 'off' | 'auto'; bess_override: { power_kw: number; energy_kwh: number } | null }
+export interface BatteryConfig { power_kw: number; energy_kwh: number; initial_soc_pct?: number; soc_min_pct?: number; soc_max_pct?: number; charge_efficiency?: number; discharge_efficiency?: number }
+export interface ScenarioRequest { bess_override?: BatteryConfig | null; ev_kw: EvKw; pv_kwp: PvKwp; day_type: DayType; load_level: LoadLevel }
+export interface ScenarioInputs extends ScenarioRequest { bess: 'off' | 'auto'; bess_override: BatteryConfig | null }
 export interface Assumption { name: string; value: JsonValue; unit: string; note: string }
 export interface HealthResponse { status: 'ok'; api_version: 'v2'; engine_version: string }
 export interface ScenariosResponse {
@@ -46,7 +47,7 @@ export interface SimulationResult {
   };
   summary: SimulationSummary; alerts: SimulationAlert[];
   verdict: { status: 'safe' | 'violations_found' | 'safe_with_bess' | 'upgrade_recommended'; message: string };
-  bess: { power_kw: number; energy_kwh: number; feasible: boolean; schedule: { index: number; start: string; duration_min: number; power_kw: number }[] } | null;
+  bess: { power_kw: number; energy_kwh: number; initial_soc_pct: number; soc_min_pct: number; soc_max_pct: number; charge_efficiency: number; discharge_efficiency: number; final_soc_pct: number; charged_kwh: number; discharged_kwh: number; loss_kwh: number; feasible: boolean; schedule: { index: number; start: string; duration_min: number; power_kw: number }[] } | null;
   cost: { upgrade_cost_inr: number; bess_cost_inr: number; net_difference_inr: number; insulation_life_years_before: number; insulation_life_years_after: number; note: string } | null;
 }
 export interface ErrorResponse { error: { code: 'invalid_input' | 'not_found' | 'method_not_allowed' | 'convergence_failed' | 'internal_error'; message: string; field: string | null } }

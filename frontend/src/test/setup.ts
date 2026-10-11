@@ -1,3 +1,3 @@
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
-afterEach(() => { cleanup(); window.location.hash = '#/'; });
+afterEach(() => { cleanup(); if (typeof window !== 'undefined') window.location.hash = '#/'; });

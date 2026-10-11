@@ -105,7 +105,6 @@ def test_request_errors(config):
         ('POST', '/scenarios', '{}', 405, 'method_not_allowed', None),
         ('GET', '/nothing', None, 404, 'not_found', None),
         ('POST', '/simulate', json.dumps(dict(PAYLOAD, bess='auto')), 400, 'invalid_input', 'bess'),
-        ('POST', '/simulate', json.dumps(dict(PAYLOAD, bess_override=dict(power_kw=10, energy_kwh=20))), 400, 'invalid_input', 'bess'),
     ]
     cases += [(method, route, None, 404, 'not_found', None)
               for method in ('GET', 'POST') for route in ('/optimize', '/dispatch')]

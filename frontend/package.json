@@ -7,11 +7,13 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config vite.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "build": "npm run typecheck && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "smoke:api": "node --experimental-strip-types scripts/smoke-api.mjs",
+    "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
     "react": "19.3.0",

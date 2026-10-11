@@ -83,7 +83,7 @@ describe('workspace navigation and real-response rendering', () => {
     const nav = screen.getByRole('navigation', { name: 'Primary navigation' });
     expect(within(nav).getByRole('link', { name: /Network/ }).getAttribute('aria-current')).toBe('page');
     await navigate('/planning');
-    expect(await screen.findByText('Interactive planning is upcoming')).toBeTruthy();
+    expect(await screen.findByText('01 · Define the charging target')).toBeTruthy();
     await navigate('/missing');
     expect(await screen.findByRole('heading', { level: 1, name: /route isn’t/ })).toBeTruthy();
   });
@@ -125,4 +125,13 @@ describe('workspace navigation and real-response rendering', () => {
     expect(await screen.findByRole('alert')).toBeTruthy();
     expect(screen.queryByText('Minimum voltage')).toBeNull();
   });
+});
+
+it('keeps actual network data visible when health returns HTML instead of API JSON', async () => {
+  const transport = vi.fn<typeof fetch>().mockImplementation(async input => String(input).endsWith('/health')
+    ? new Response('<html>Vite fallback</html>', { headers: { 'Content-Type': 'text/html' } }) : response(network));
+  render(<DataProvider client={new ApiClient('/api', 1000, transport)}><App /></DataProvider>);
+  expect(await screen.findByText(network.neighbourhood.name)).toBeTruthy();
+  expect(screen.getByText('API unavailable')).toBeTruthy();
+  expect(screen.getByRole('alert').textContent).toContain('received HTML');
 });

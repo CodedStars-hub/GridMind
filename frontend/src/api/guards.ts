@@ -44,7 +44,7 @@ export function isSimulation(v: unknown): v is SimulationResult {
   if (!object(v) || !meta(v.meta) || !object(v.series) || !object(v.summary) || !object(v.verdict) || !text(v.verdict.message) || !oneOf(v.verdict.status, ['safe', 'violations_found', 'safe_with_bess', 'upgrade_recommended'])) return false;
   const series = v.series;
   const inputs = (v.meta as ObjectValue).inputs;
-  if (!object(inputs) || !oneOf(inputs.ev_kw, [10, 30, 50, 100]) || !oneOf(inputs.pv_kwp, [0, 10, 20, 30]) || !oneOf(inputs.day_type, days) || !oneOf(inputs.load_level, levels) || inputs.bess !== 'off' || inputs.bess_override !== null) return false;
+  if (!object(inputs) || !oneOf(inputs.ev_kw, [10, 30, 50, 100]) || !oneOf(inputs.pv_kwp, [0, 10, 20, 30]) || !oneOf(inputs.day_type, days) || !oneOf(inputs.load_level, levels) || inputs.bess !== 'off') return false;
   const numericKeys = ['ambient_c', 'base_kw', 'ev_kw', 'pv_kw', 'net_kw', 'voltage_pu', 'loading_pct', 'top_oil_c', 'hotspot_c', 'aging_factor'];
   const summaryKeys = ['min_voltage_pu', 'peak_voltage_deviation_pu', 'peak_hotspot_c', 'peak_loading_pct', 'peak_aging_factor', 'daily_equivalent_aging_hours', 'insulation_life_years'];
   const hasSeries = strings(series.time) && (series.time as string[]).length === 96 && numericKeys.every(key => numbers(series[key]) && (series[key] as number[]).length === 96);
@@ -52,6 +52,10 @@ export function isSimulation(v: unknown): v is SimulationResult {
   const summary = v.summary;
   const hasSummary = summaryKeys.every(key => finite(summary[key])) && ['min_voltage_time', 'peak_hotspot_time', 'peak_loading_time'].every(key => text(summary[key]));
   const alerts = list(v.alerts, a => object(a) && oneOf(a.type, ['voltage_low', 'voltage_high', 'hotspot_warning', 'hotspot_critical', 'loading_over_100']) && oneOf(a.severity, ['info', 'warning', 'critical']) && text(a.start) && text(a.end) && finite(a.peak_value) && oneOf(a.unit, ['p.u.', '°C', '%']));
+  const override = inputs.bess_override;
+  if (override !== null && (!object(override) || !finite(override.power_kw) || !finite(override.energy_kwh) || override.power_kw <= 0 || override.energy_kwh <= 0)) return false;
+  const battery = v.bess;
+  const batteryValid = battery === null ? override === null && series.bess_kw === null && series.bess_soc_pct === null : object(battery) && override !== null && ['power_kw', 'energy_kwh', 'initial_soc_pct', 'soc_min_pct', 'soc_max_pct', 'charge_efficiency', 'discharge_efficiency', 'final_soc_pct', 'charged_kwh', 'discharged_kwh', 'loss_kwh'].every(key => finite(battery[key])) && typeof battery.feasible === 'boolean' && list(battery.schedule, step => object(step) && finite(step.index) && text(step.start) && finite(step.duration_min) && finite(step.power_kw)) && (battery.schedule as unknown[]).length === 96 && numbers(series.bess_kw) && numbers(series.bess_soc_pct);
   // Battery/cost objects are typed for the contract, but this milestone only submits the supported no-BESS request.
-  return hasSeries && nullableSeries && hasSummary && alerts && v.bess === null && v.cost === null;
+  return hasSeries && nullableSeries && hasSummary && alerts && batteryValid && v.cost === null;
 }
