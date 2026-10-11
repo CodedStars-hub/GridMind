@@ -199,7 +199,7 @@ def test_exact_alert_thresholds_and_same_start_order(config):
 
 
 def test_bess_unimplemented_and_invalid_input(config):
-    for request in (payload(bess='auto'), payload(bess_override=dict(power_kw=30, energy_kwh=60))):
+    for request in (payload(bess='auto'),):
         with pytest.raises(NotImplementedError, match='battery simulation is added in M8'):
             simulate_day(validate_request(request, config['scenarios']), config)
     with pytest.raises(InvalidInputError) as caught:

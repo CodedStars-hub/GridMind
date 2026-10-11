@@ -136,3 +136,7 @@ aws cloudformation wait stack-delete-complete --stack-name "$GRIDMIND_STACK" --r
 Retained logs and artifact objects remain, may incur storage charges, and need a separate reviewed cleanup decision. No deletion is performed automatically.
 
 All engineering results remain modeled estimates, not telemetry, interconnection approvals or guaranteed optimal siting. Independent transformer capacity excludes shared upstream constraints. Infrastructure preparation does not change those model limitations.
+
+## M18 release audit
+
+The greedy HTTP API integration already covers `/v2/telemetry/replay` and `/v2/dispatch/evaluate`; no parallel gateway resources or permissions are needed. Packaging now explicitly requires both `bess.py` and `telemetry.py`, and isolated-package tests execute battery/replay/advisory/CORS workflows. Preserve the one-request/second throttle and burst two; pace verification and investigate 429 rather than loosening controls. See [the M18 release gate](../docs/release-readiness.md) for exact local, production build, approved deployment and rollback commands. `samconfig.toml` remains untouched. Production browser access requires a reviewed exact origin; no deployment is performed by this audit.

@@ -46,7 +46,7 @@ describe('API client contract and transport', () => {
   });
   it('rejects invalid JSON even when HTTP status is successful', async () => {
     const client = new ApiClient('/api', 1000, vi.fn<typeof fetch>().mockResolvedValue(new Response('<html>error</html>')));
-    await expect(client.health()).rejects.toMatchObject({ code: 'invalid_response' });
+    await expect(client.health()).rejects.toMatchObject({ code: 'invalid_json' });
   });
   it('rejects a malformed topology', async () => {
     const client = new ApiClient('/api', 1000, vi.fn<typeof fetch>().mockResolvedValue(respond({ ...network, transformers: [{ id: 'T1' }] })));
@@ -86,4 +86,17 @@ describe('API client contract and transport', () => {
     expect(() => normalizeBaseUrl(base)).toThrow(ApiError);
   });
   it('rejects an invalid timeout', () => { expect(() => new ApiClient('/api', 0)).toThrow(ApiError); });
+});
+
+it.each(['health', 'network', 'scenarios'] as const)('rejects Vite HTML fallback for %s with actionable diagnostics', async endpoint => {
+  const client = new ApiClient('/api', 1000, vi.fn<typeof fetch>().mockResolvedValue(new Response('<!doctype html><html>Vite</html>', { headers: { 'Content-Type': 'text/html' } })));
+  await expect(client[endpoint]()).rejects.toMatchObject({ code: 'unexpected_content_type', status: 200, message: expect.stringContaining('restart') });
+});
+it('rejects HTML in place of a successful simulation', async () => {
+  const client = new ApiClient('/api', 1000, vi.fn<typeof fetch>().mockResolvedValue(new Response('<html>Vite</html>', { headers: { 'Content-Type': 'text/html' } })));
+  await expect(client.simulate({ ev_kw: 50, pv_kwp: 30, day_type: 'summer_weekday', load_level: 'heavy' })).rejects.toMatchObject({ code: 'unexpected_content_type' });
+});
+it('reports non-JSON unsuccessful HTTP status separately from malformed success JSON', async () => {
+  const client = new ApiClient('/api', 1000, vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status: 404 })));
+  await expect(client.health()).rejects.toMatchObject({ code: 'http_error', status: 404 });
 });

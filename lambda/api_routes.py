@@ -9,10 +9,12 @@ from gridmind_engine.network import _network_data, _value, assess_network, valid
 from gridmind_engine.planner import plan_charging
 from gridmind_engine.planner_sites import validate_plan_request
 from gridmind_engine.validate import InvalidInputError
+from gridmind_engine.telemetry import replay, evaluate
 
 # Route identifiers, not model assumptions. Existing resource names stay intact.
 METHODS = {'/health': 'GET', '/network': 'GET', '/assess': 'POST',
-           '/impact': 'POST', '/hosting': 'POST', '/plan': 'POST'}
+           '/impact': 'POST', '/hosting': 'POST', '/plan': 'POST',
+           '/telemetry/replay': 'POST', '/dispatch/evaluate': 'POST'}
 
 
 def build_network_response(config):
@@ -43,6 +45,10 @@ def build_network_response(config):
 
 def invoke(route, payload, config):
     """Validate before invoking a public engine operation; never compute physics."""
+    if route == '/telemetry/replay':
+        return replay(payload, config)
+    if route == '/dispatch/evaluate':
+        return evaluate(payload, config)
     if route == '/health':
         return dict(status='ok', api_version='v2', engine_version=__version__)
     if route == '/network':

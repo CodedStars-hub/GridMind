@@ -968,3 +968,112 @@ The document remains contract v3; `/v2` denotes the HTTP namespace, not a replac
 All responses have Content-Type application/json and Cache-Control no-store. OPTIONS on a known available route returns 204 with an empty body, Access-Control-Allow-Methods GET, POST, OPTIONS and Access-Control-Allow-Headers Content-Type. `GRIDMIND_ALLOWED_ORIGINS` is a JSON list of exact HTTP(S) origins, default `[]` (same-origin access only). Only an approved supplied Origin is reflected; credentialed CORS is not enabled. A disallowed Origin or preflight method/header returns 400 invalid_input naming origin/method/headers. Configured allowlists add Vary: Origin. No approved production frontend origin or deployed URL is inferred.
 
 Health means the application can import and load its bundled configuration, not that AWS dependencies, all simulation cases or real telemetry were checked. Config loads once per process from GRIDMIND_CONFIG_DIR or config beside the packaged handler; the repository config directory remains the local fallback. No result cache or precomputation is added. Logs retain one structured request record; internal tracebacks stay in logs and are never returned to clients. Model outputs and all engineering limitations in sections 10–12 apply unchanged.
+
+
+## M15 fixed-size battery simulation (local implementation; deployment pending)
+
+The existing POST /simulate and POST /v2/simulate support optional `bess_override`. Existing no-override request/response shapes and numerical results remain unchanged. `bess="auto"` without a size still returns 400 invalid_input (automatic sizing is not implemented). Historical notes saying every override returns 400 are superseded by this section for the local implementation only; the deployed older API may still reject overrides. No deployment occurred.
+
+| Override field | Type | Unit | Nullable/default | Validation |
+|---|---|---|---|---|
+| power_kw | number | grid-side kW | Required, non-null | Finite, positive, shared charge/discharge power limit |
+| energy_kwh | number | stored kWh | Required, non-null | Finite, positive |
+| initial_soc_pct | number | % | Optional; bess config initial_soc_pct | Within resolved SOC bounds |
+| soc_min_pct | number | % | Optional; bess config soc_min_pct | Between 0 and 100, strictly below maximum |
+| soc_max_pct | number | % | Optional; bess config soc_max_pct | Between 0 and 100, strictly above minimum |
+| charge_efficiency | number | ratio | Optional; sqrt(config round_trip_efficiency) | Finite, greater than 0 and at most 1 |
+| discharge_efficiency | number | ratio | Optional; sqrt(config round_trip_efficiency) | Finite, greater than 0 and at most 1 |
+
+All supplied optional values are non-null and booleans are rejected. `meta.inputs.bess_override` echoes supplied fields; resolved defaults are in `bess`. With an override, `series.bess_kw` and `series.bess_soc_pct` are 96 finite values; otherwise they stay whole-array null. Positive battery power discharges onto the grid; negative power charges from the grid. SOC is end-of-step. `series.net_kw = base_kw + ev_kw - pv_kw - bess_kw`. Battery reactive power is zero. Shared electrical and thermal equations are unchanged.
+
+The non-null `bess` object retains `power_kw`, `energy_kwh`, `feasible` and its 96-item `{index,start,duration_min,power_kw}` schedule. It additionally has:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| initial_soc_pct | number | % | no | Resolved initial SOC |
+| soc_min_pct | number | % | no | Resolved minimum SOC |
+| soc_max_pct | number | % | no | Resolved maximum SOC |
+| charge_efficiency | number | ratio | no | Resolved charging efficiency |
+| discharge_efficiency | number | ratio | no | Resolved discharge efficiency |
+| final_soc_pct | number | % | no | Terminal SOC after the reported dispatch day |
+| charged_kwh | number | grid-side kWh | no | Integrated energy drawn by the battery |
+| discharged_kwh | number | grid-side kWh | no | Integrated energy delivered by the battery |
+| loss_kwh | number | kWh | no | Charging plus discharging conversion losses |
+
+Dispatch targets real net kW equal to rated_kva × power_factor_base × loading_discharge_threshold_pct / 100. This nominal real-power proxy is not a guaranteed current or voltage constraint solver. Discharge above this target; recharge below it only in the configured overnight window, limited to the same target. Enforce inverter power and available stored energy each step. Charge adds grid kWh × charge_efficiency; discharge removes delivered kWh / discharge_efficiency. Never charge and discharge simultaneously. No export is induced by discharge.
+
+Dispatch is calculated once from the requested initial SOC. The two thermal passes replay this fixed schedule to warm the thermal model; they are not two independently funded battery operating days and do not assert periodic battery SOC. No terminal SOC equality is imposed: initial stored energy may be depleted, so compare the returned final SOC as well as grid improvements. The ledger satisfies final stored energy = initial stored energy + charged_kwh − discharged_kwh − loss_kwh before display rounding.
+
+`bess.feasible` means no reported voltage, hot-spot or loading-limit events remain; the heuristic may be infeasible. Verdict is safe_with_bess when feasible, otherwise violations_found. `cost` remains null: no economic guarantee, battery sizing, neighbourhood allocation/remedy integration or dispatch publication is added. Output rounds at the existing four-decimal presentation boundary. Existing aging summaries reflect the actual battery-adjusted electrical/thermal simulation, not post-processed improvements.
+
+
+## M16 simulated telemetry and advisory dispatch (local; deployment pending)
+
+These additive endpoints use the existing HTTP API adapter and error shape. Existing simulation/replayed BESS physics is unchanged. Legacy `/dispatch` still returns 404; this demonstration does not implement publishing, hardware actuation or the future OpenADR charger-cap contract.
+
+| Method/path | Body | Success |
+|---|---|---|
+| POST /v2/telemetry/replay | `{scenario: <existing simulation request>, start_time: <UTC ISO-8601 string>}` | Replay object below |
+| POST /v2/dispatch/evaluate | `{telemetry: <record>, now: <UTC ISO-8601 string>, previous_timestamp: <UTC string or null, optional>, battery: <M15 override fields or null>}` | Advisory object below |
+
+Unversioned aliases `/telemetry/replay` and `/dispatch/evaluate` are also supported, with optional leading `/api`. Wrong methods return 405. Invalid bodies, identifiers, readings, stale/future timestamps or non-increasing timestamps return 400 invalid_input with a named field. The existing 2048-byte request-body limit and response headers remain. No new deployment occurred.
+
+Replay object:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| simulated | boolean, always true | none | no | Never physical telemetry |
+| transformer_id | string, single-transformer-model | identifier | no | Independent assessment model, not a neighbourhood transformer assignment |
+| step_minutes | number | min | no | Configured simulation resolution |
+| records | array, 96 records | none | no | Ascending index/time order |
+| battery | object with resolved M15 BatteryParams fields | kW, kWh, %, ratios as in M15 | yes | Null without battery |
+
+Telemetry record schema:
+
+| Field | Type | Unit | Nullable | Validation/meaning |
+|---|---|---|---|---|
+| index | integer | count | no in replay; optional in evaluation | Nonnegative sample index |
+| timestamp | UTC ISO-8601 string | UTC time | no | End of simulated step; first sample is start_time + step_minutes |
+| transformer_id | string | identifier | no | Must be single-transformer-model |
+| source | string, simulation | enum | no | Hardware sources rejected |
+| loading_pct | number | % rated current | yes | Finite, nonnegative |
+| voltage_pu | number | p.u. | yes | Finite, positive |
+| hotspot_c | number | °C | yes | Finite, above absolute zero |
+| battery_soc_pct | number | % | yes | Finite, between 0 and 100; null without battery |
+| net_kw | number | real kW | yes | Finite, export may be negative |
+
+Replay records use real existing simulation outputs; timestamps convert the API's step-start labels to end-of-step snapshot time for temperatures and SOC. Grid power/voltage/loading are that step's modeled held conditions, not sensor observations. Omitted numerical readings in evaluation are treated as null. Missing data/battery yields idle, not a guessed reading. Optional fields otherwise cannot have wrong types or non-finite values.
+
+Advisory object:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| simulated | boolean, true | none | no | Advisory simulation only |
+| published | boolean, false | none | no | No MQTT/IoT/hardware command |
+| action | string | enum | no | charge, discharge or idle |
+| power_kw | number | grid-side kW | no | Positive discharge, negative charge, zero idle |
+| next_soc_pct | number | % | yes | One-step SOC projection; null when unavailable |
+| telemetry_timestamp | string | UTC time | no | Echoes evaluated sample timestamp |
+| reasons | list of strings | stable codes | no | Codes below |
+| alerts | list of strings | engineering alert types | no | Existing voltage_low/high, hotspot_warning/critical, loading_over_100 codes |
+| constraints | object | M15 units plus min | no | Resolved BatteryParams fields and step_minutes; empty if data/battery unavailable |
+
+Freshness uses config `telemetry_max_age_seconds`; age must be between zero and that value inclusive. If provided, previous_timestamp must be strictly earlier. The caller supplies the simulated clock and previous timestamp; the API is stateless, unauthenticated and cannot enforce device-stream continuity across requests. Replay UI uses record.timestamp as now, clearly a simulated clock.
+
+Evaluate strict engineering thresholds from limits config. High voltage or critical transformer hot-spot interlocks to idle. No charging while measured loading exceeds the configured discharge threshold or voltage/hot-spot stress is present. Otherwise use the configured recharge window and nominal peak-shaving target. Stress discharge is limited to positive net demand and existing BESS power/SOC/efficiency physics. Voltage/hot-spot stress may request inverter-limited relief even below the nominal real-power target.
+
+Before recommending charge, infer nonnegative reactive demand from the simulated apparent-power magnitude (voltage × per-unit current × rated_kva) and net real power, then call the shared power-flow solver. Inhibit charge if predicted voltage is outside configured limits, loading exceeds the configured discharge threshold, or the solver fails. Inference is valid only under this balanced simulation's nonnegative reactive-load/unity-PV-and-battery assumptions and rounded telemetry; it is not a general real-device estimator. No future thermal guarantee is made.
+
+Reason codes: missing_data_idle, soc_outside_bounds_idle, engineering_interlock_idle, charge_grid_limit_idle, stress_relief, overnight_recharge, soc_or_policy_limit_idle. SOC outside resolved operating bounds interlocks to idle. Power and SOC presentation use existing four-decimal rounding. Recommendations do not feed back into the next replay record: the replay follows its independently computed scenario, not a closed-loop plant or live hardware.
+
+## M17 — Explicit precomputed simulation artifacts
+
+This is a static frontend artifact, not a new API route. Existing response shapes and physics are unchanged. `precomputed/scenarios.json` contains `schema_version` (integer, currently 1), `engine_version` (string), `generated_at` (UTC ISO timestamp), `model_sha256` (SHA-256 string), `source_hashes` (relative source/config paths mapped to SHA-256 strings), and `artifacts` (list of `{id: string, inputs: full echoed simulation inputs, result: existing full simulation result}`). No fields are nullable beyond the existing simulation contract. `result.meta.source` is `cached`; the UI labels it **precomputed**, never live.
+
+Artifacts use the default, quiet winter/moderate, and stress summer/critical scenarios from configured valid choices. Source/config fingerprints identify the complete snapshot model, beyond the package version. Exact-equivalence lookup requires complete matching inputs (including BESS), engine version and model/config fingerprint. The deployed API does not expose this fingerprint, so the UI does not assert equivalence to the current deployment. Users explicitly select a snapshot; failed requests are never silently replaced. Snapshot timestamps describe generation, not live telemetry. Dispatch monitoring is unavailable for a snapshot. Current backend thresholds are not overlaid on snapshots.
+
+Metadata GETs retry at most once after 429/5xx within the original request timeout. Retry-After seconds or dates are respected when their wait is at most two seconds; longer waits return the original failure rather than retrying early. No POST is automatically retried. Cancellation aborts both wait and request. All existing JSON, HTML-response, native-fetch binding and contract safeguards remain.
+
+## M18 release integration notes
+
+No public JSON shapes or engineering calculations change. The packaged Python 3.12 Lambda includes battery and telemetry modules; the existing ANY root/greedy routes forward new and legacy endpoints with payload 2.0. Production frontend builds require an explicit HTTPS API base, not the Vite `/api` development proxy. Browser access uses the exact-origin Lambda allowlist and OPTIONS checks. Local adapter preflight now forwards the requested method/header fields for the same validation as Lambda. Throttling remains one request/second with burst two; verification is paced and stops on unexpected statuses without aggressive retries. See docs/release-readiness.md for deployment approval, verification and rollback gates.

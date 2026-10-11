@@ -6,7 +6,7 @@ import { Assessment } from '../pages/Assessment';
 import { Planning } from '../pages/Planning';
 import { NotFound } from '../pages/NotFound';
 
-function currentPath() { return window.location.hash.slice(1) || '/'; }
+function currentPath() { return window.location.hash.slice(1).split('?')[0] || '/'; }
 export function App() {
   const [path, setPath] = useState(currentPath);
   useEffect(() => {

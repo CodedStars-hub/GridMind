@@ -22,6 +22,7 @@ def application_files(root):
     required = ['handler.py', 'api_routes.py', 'api_http.py',
                 'gridmind_engine/__init__.py', 'gridmind_engine/simulate.py',
                 'gridmind_engine/network.py', 'gridmind_engine/impact.py',
+                'gridmind_engine/bess.py', 'gridmind_engine/telemetry.py',
                 'gridmind_engine/hosting.py', 'gridmind_engine/planner.py',
                 'config/neighbourhood.json', 'config/profiles/base_load_mixed_profile.json',
                 'config/profiles/base_load_commercial_profile.json', 'config/profiles/ev_daytime_profile.json']

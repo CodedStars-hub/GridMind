@@ -20,6 +20,11 @@ class BessOverride:
 
     power_kw: float
     energy_kwh: float
+    initial_soc_pct: float | None = None
+    soc_min_pct: float | None = None
+    soc_max_pct: float | None = None
+    charge_efficiency: float | None = None
+    discharge_efficiency: float | None = None
 
 
 @dataclass(frozen=True)
@@ -62,8 +67,9 @@ def validate_request(payload, scenarios_config):
         if not isinstance(override, dict):
             raise InvalidInputError('bess_override', 'bess_override must be an object or null.')
         members = ('power_kw', 'energy_kwh')
+        optional = ('initial_soc_pct', 'soc_min_pct', 'soc_max_pct', 'charge_efficiency', 'discharge_efficiency')
         for key in override:
-            if key not in members:
+            if key not in members + optional:
                 raise InvalidInputError(f'bess_override.{key}', f'Unknown BESS override field: {key}.')
         for key in members:
             field = f'bess_override.{key}'
@@ -76,5 +82,14 @@ def validate_request(payload, scenarios_config):
                 valid = False
             if not valid:
                 raise InvalidInputError(field, f'{field} must be a finite positive number, not a boolean.')
+        for key in optional:
+            if key in override:
+                value = override[key]
+                try:
+                    finite = type(value) in (int, float) and math.isfinite(value)
+                except OverflowError:
+                    finite = False
+                if not finite or value < 0 or (key.endswith('efficiency') and not 0 < value <= 1) or (key.endswith('pct') and value > 100):
+                    raise InvalidInputError(f'bess_override.{key}', f'{key} is outside its finite valid range.')
         override = BessOverride(**override)
     return ValidatedInputs(**values, bess_override=override)

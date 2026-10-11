@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import asdict
 import math
 
-from . import __version__, aging, powerflow, thermal
+from . import __version__, aging, powerflow, thermal, bess
 from .profiles import MINUTES_PER_HOUR, LoadSeries, _timing, build_load_series
 from .validate import validate_request
 
@@ -98,9 +98,12 @@ def _verdict(alerts, limits_config):
 
 def simulate_day(inputs, config):
     """Report the last of two daily passes; temperatures are end-of-step values."""
-    if inputs.bess_override is not None or inputs.bess != 'off':
+    if inputs.bess_override is None and inputs.bess != 'off':
         raise NotImplementedError('battery simulation is added in M8')
-    return simulate_load_series(build_load_series(inputs, config), config, asdict(inputs))
+    echo = asdict(inputs)
+    if echo['bess_override'] is not None:
+        echo['bess_override'] = {key: value for key, value in echo['bess_override'].items() if value is not None}
+    return simulate_load_series(build_load_series(inputs, config), config, echo)
 
 
 def simulate_load_series(loads: LoadSeries, config: dict, input_echo: dict) -> dict:
@@ -136,10 +139,26 @@ def simulate_load_series_with_precision(loads: LoadSeries, config: dict, input_e
     step_minutes = config['scenarios']['parameters']['step_minutes']['value']
     first_flow = powerflow.simulate_step(loads.base_kw[0], loads.ev_kw[0], loads.pv_kw[0], flow_params)
     state = thermal.initial_state_at_load(first_flow.current_pu, thermal_params)
+    battery = None
+    powers = [0.0] * steps
+    soc = None
+    override = input_echo.get('bess_override')
+    if override is not None:
+        from .validate import BessOverride
+        try:
+            battery = bess.battery_params(BessOverride(**override), config)
+        except ValueError as exc:
+            from .validate import InvalidInputError
+            raise InvalidInputError('bess_override', str(exc)) from None
+        policy = config['bess']['parameters']
+        target = flow_params.rated_kva * flow_params.power_factor_base * policy['loading_discharge_threshold_pct']['value'] / bess.PERCENT
+        powers, soc, energy_metrics = bess.dispatch([b + e - p for b, e, p in zip(loads.base_kw, loads.ev_kw, loads.pv_kw)], loads.time, step_minutes, battery, target, policy['charge_window_start']['value'], policy['charge_window_end']['value'])
+        first_flow = powerflow.simulate_step(loads.base_kw[0], loads.ev_kw[0], loads.pv_kw[0], flow_params, bess_kw=powers[0])
+        state = thermal.initial_state_at_load(first_flow.current_pu, thermal_params)
     recorded = {name: [] for name in ('voltage_pu', 'loading_pct', 'top_oil_c', 'hotspot_c', 'aging_factor')}
     for daily_pass in range(PASSES):
         for index in range(len(loads.time)):
-            flow = powerflow.simulate_step(loads.base_kw[index], loads.ev_kw[index], loads.pv_kw[index], flow_params)
+            flow = powerflow.simulate_step(loads.base_kw[index], loads.ev_kw[index], loads.pv_kw[index], flow_params, bess_kw=powers[index])
             temperatures = thermal.step(state, flow.current_pu, loads.ambient_c[index], step_minutes, thermal_params)
             state = temperatures.state
             factor = aging.aging_factor(temperatures.hotspot_c, aging_params)
@@ -153,7 +172,7 @@ def simulate_load_series_with_precision(loads: LoadSeries, config: dict, input_e
     series = {
         'time': list(loads.time), 'ambient_c': list(loads.ambient_c),
         'base_kw': list(loads.base_kw), 'ev_kw': list(loads.ev_kw), 'pv_kw': list(loads.pv_kw),
-        'net_kw': [b + e - p for b, e, p in zip(loads.base_kw, loads.ev_kw, loads.pv_kw)],
+        'net_kw': [b + e - p - power for b, e, p, power in zip(loads.base_kw, loads.ev_kw, loads.pv_kw, powers)],
         **recorded,
     }
     raw_series = deepcopy(series)
@@ -168,6 +187,15 @@ def simulate_load_series_with_precision(loads: LoadSeries, config: dict, input_e
         'series': series, 'summary': summary, 'alerts': alerts,
         'verdict': _verdict(alerts, config['limits']), 'bess': None, 'cost': None,
     }
+
+    if battery is not None:
+        series['bess_kw'] = [round(value, ROUND_DIGITS) for value in powers]
+        series['bess_soc_pct'] = [round(value, ROUND_DIGITS) for value in soc]
+        raw_series.update(bess_kw=powers, bess_soc_pct=soc)
+        info = asdict(battery) | energy_metrics | {'final_soc_pct': soc[-1]}
+        result['bess'] = {key: round(value, ROUND_DIGITS) for key, value in info.items()}
+        result['bess'].update(feasible=not any(event['severity'] in ('warning', 'critical') or event['type'] == 'loading_over_100' for event in alerts), schedule=[dict(index=i, start=time, duration_min=step_minutes, power_kw=round(powers[i], ROUND_DIGITS)) for i, time in enumerate(loads.time)])
+        result['verdict'] = dict(status='safe_with_bess' if result['bess']['feasible'] else 'violations_found', message='Battery dispatch simulated; all configured voltage, loading and hot-spot constraints satisfied.' if result['bess']['feasible'] else 'Battery dispatch simulated; constraints remain. This heuristic does not guarantee remediation.')
 
     return result, raw_series
 
