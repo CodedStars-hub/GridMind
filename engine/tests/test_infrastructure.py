@@ -44,22 +44,59 @@ def test_runtime_package_and_budget(template):
     assert not any(k in function for k in ('VpcConfig', 'Layers', 'FunctionUrlConfig', 'DeadLetterQueue'))
 
 
-def test_single_default_proxy_preserves_all_methods_and_paths(template):
+def test_explicit_root_and_greedy_proxy_preserve_all_methods_and_paths(template):
     api = template['Resources']['GridMindHttpApi']['Properties']
     assert api['StageName'] == '$default'
     assert api['DefaultRouteSettings'] == {'ThrottlingRateLimit': 1, 'ThrottlingBurstLimit': 2}
     # Lambda already owns approved-origin CORS; no conflicting gateway policy.
     assert 'CorsConfiguration' not in api
     paths = api['DefinitionBody']['paths']
-    assert set(paths) == {'/$default'}
-    route = paths['/$default']['x-amazon-apigateway-any-method']
-    assert route['isDefaultRoute'] is True
-    integration = route['x-amazon-apigateway-integration']
-    assert integration['type'] == 'aws_proxy' and integration['httpMethod'] == 'POST'
-    assert integration['payloadFormatVersion'] == '2.0'
-    assert integration['uri'] == {'Fn::GetAtt': ['GridMindFunction', 'Arn']}
-    assert integration['timeoutInMillis'] == 29000
-    assert integration['timeoutInMillis'] > template['Resources']['GridMindFunction']['Properties']['Timeout'] * 1000
+    # The greedy route covers /v2/health and every other non-root path;
+    # an explicit root route also lets Lambda return its structured 404 for /.
+    assert set(paths) == {'/', '/{proxy+}'}
+    assert paths['/'] == paths['/{proxy+}']
+    for definition in paths.values():
+        assert set(definition) == {'x-amazon-apigateway-any-method'}
+        route = definition['x-amazon-apigateway-any-method']
+        assert 'isDefaultRoute' not in route
+        integration = route['x-amazon-apigateway-integration']
+        assert integration['type'] == 'aws_proxy' and integration['httpMethod'] == 'POST'
+        assert integration['payloadFormatVersion'] == '2.0'
+        assert integration['uri'] == {'Fn::GetAtt': ['GridMindFunction', 'Arn']}
+        assert 'requestParameters' not in integration  # Preserve rawPath for handler routing.
+        assert integration['timeoutInMillis'] == 29000
+        assert integration['timeoutInMillis'] > template['Resources']['GridMindFunction']['Properties']['Timeout'] * 1000
+
+
+@pytest.mark.parametrize('method,path,status', [
+    ('GET', '/v2/health', 200),
+    ('GET', '/api/v2/health/', 200),
+    ('POST', '/v2/health', 405),
+    ('GET', '/v2/simulate', 405),
+    ('GET', '/v2/missing', 404),
+    ('GET', '/', 404),
+    ('OPTIONS', '/v2/plan', 204),
+])
+def test_proxy_payload_keeps_handler_routing_semantics(template, monkeypatch, method, path, status):
+    """Synthetic integration events test Lambda behavior, not live API Gateway routing."""
+    import handler
+
+    monkeypatch.setenv('GRIDMIND_ALLOWED_ORIGINS', '["https://approved.example"]')
+    route_path = '/' if path == '/' else '/{proxy+}'
+    integration = template['Resources']['GridMindHttpApi']['Properties']['DefinitionBody']['paths'][route_path]['x-amazon-apigateway-any-method']['x-amazon-apigateway-integration']
+    event = dict(version=integration['payloadFormatVersion'], rawPath=path,
+                 routeKey='ANY ' + route_path,
+                 requestContext={'http': {'method': method}}, body=None,
+                 headers={'origin': 'https://approved.example'}, isBase64Encoded=False)
+    response = handler.lambda_handler(event, None)
+    assert response['statusCode'] == status
+    assert response['headers']['Access-Control-Allow-Origin'] == 'https://approved.example'
+    if path == '/v2/health' and method == 'GET':
+        assert json.loads(response['body'])['status'] == 'ok'
+    elif status in (404, 405):
+        assert json.loads(response['body'])['error']['code'] == {404: 'not_found', 405: 'method_not_allowed'}[status]
+    elif status == 204:
+        assert response['body'] == ''
 
 
 def test_runtime_iam_is_own_log_streams_only(template):

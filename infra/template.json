@@ -77,7 +77,7 @@
     "GridMindHttpApi": {
       "Type": "AWS::Serverless::HttpApi",
       "Metadata": {"com.aws.cloudformation.Context": {
-        "why": "Default route preserves handler-level aliases, OPTIONS and structured 404/405 responses; Lambda owns CORS.",
+        "why": "Explicit ANY root and greedy proxy routes preserve handler-level aliases, OPTIONS and structured 404/405 responses; Lambda owns CORS.",
         "must": ["Keep proxy payload 2.0", "Do not add conflicting gateway CORS", "Keep the public API scoped to this function"]
       }},
       "Properties": {
@@ -87,14 +87,43 @@
           "openapi": "3.0.1",
           "info": {"title": "GridMind API v2", "version": "2"},
           "paths": {
-            "/$default": {
+            "/": {
               "x-amazon-apigateway-any-method": {
-                "isDefaultRoute": true,
-                "responses": {"default": {"description": "Existing GridMind handler response"}},
+                "responses": {
+                  "default": {
+                    "description": "Existing GridMind handler response"
+                  }
+                },
                 "x-amazon-apigateway-integration": {
                   "type": "aws_proxy",
                   "httpMethod": "POST",
-                  "uri": {"Fn::GetAtt": ["GridMindFunction", "Arn"]},
+                  "uri": {
+                    "Fn::GetAtt": [
+                      "GridMindFunction",
+                      "Arn"
+                    ]
+                  },
+                  "payloadFormatVersion": "2.0",
+                  "timeoutInMillis": 29000
+                }
+              }
+            },
+            "/{proxy+}": {
+              "x-amazon-apigateway-any-method": {
+                "responses": {
+                  "default": {
+                    "description": "Existing GridMind handler response"
+                  }
+                },
+                "x-amazon-apigateway-integration": {
+                  "type": "aws_proxy",
+                  "httpMethod": "POST",
+                  "uri": {
+                    "Fn::GetAtt": [
+                      "GridMindFunction",
+                      "Arn"
+                    ]
+                  },
                   "payloadFormatVersion": "2.0",
                   "timeoutInMillis": 29000
                 }

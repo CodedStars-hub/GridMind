@@ -8,7 +8,7 @@ No existing stack, account, resource names or live endpoint have been verified. 
 
 Lambda has 2048 MB memory and a 25-second timeout. The HTTP integration timeout is 29 seconds; stage throttling is one request/second with burst two. These are initial operational settings, not measured cloud performance guarantees or a spending cap. Logs expire after 14 days; the log group is retained on stack deletion/replacement to preserve diagnostics. The role can only create streams and write events in that group. Invocation is restricted to the target account, API and default stage.
 
-The API's [default proxy route](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-open-api.html) forwards all paths/methods to the existing handler. This preserves structured unknown-route and wrong-method errors, legacy aliases and optional `/api` prefixes. Supported v2 operations are GET `/v2/health`, `/v2/scenarios`, `/v2/network`; POST `/v2/simulate`, `/v2/assess`, `/v2/impact`, `/v2/hosting`, `/v2/plan`.
+The API defines explicit [ANY greedy and root routes](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html) in its inline OpenAPI: `/{proxy+}` forwards every non-root path and `/` forwards the root. Both use the same Lambda proxy integration with payload format 2.0. In particular, GET `/v2/health` matches `ANY /{proxy+}` and reaches `handler.lambda_handler` with `rawPath=/v2/health` and method GET; the handler selects its health response. No function Events are needed because the OpenAPI integrations and API-scoped invocation permission are explicit. This preserves structured unknown-route and wrong-method errors, OPTIONS, legacy aliases and optional `/api` prefixes. Supported v2 operations are GET `/v2/health`, `/v2/scenarios`, `/v2/network`; POST `/v2/simulate`, `/v2/assess`, `/v2/impact`, `/v2/hosting`, `/v2/plan`.
 
 CORS is implemented by Lambda, including OPTIONS, with exact origins supplied through `AllowedOriginsJson`. Its default `[]` enables no cross-origin callers. Do not configure competing API Gateway CORS or wildcard credentialed access. The handler enforces the contract's 2048-byte decoded body limit, returning 400; this is not a custom gateway request-size limit.
 
@@ -25,10 +25,11 @@ git diff --check
 
 The deterministic `out/gridmind-api.zip` contains the handler/adapters, every engine module, all top-level config JSON and all profile JSON. It excludes environments, tests, caches, credentials, Git and documentation. `CodeUri` points to this pre-built ZIP relative to the template; no dependency installation, Docker or `sam build` is needed. SAM supports [local deployment artifacts](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html) uploaded during deployment. Isolated-package tests verify model bytes, required files, health and CORS without repository import paths.
 
-Infrastructure tests check resource references, dependency cycles, scoped permissions, runtime settings and proxy wiring. They do **not** run the SAM transform or substitute for full CloudFormation validation. SAM CLI, cfn-lint and cfn-guard are unavailable locally; no tools were installed. After separately approving installation, run:
+Infrastructure tests check resource references, dependency cycles, scoped permissions, runtime settings and proxy wiring. They do **not** run the SAM transform or substitute for full CloudFormation validation. SAM CLI is now available for local lint validation and build; no tools were installed for the routing fix. These checks do not verify live routing. Run:
 
 ```bash
 sam validate --template-file infra/template.json --lint --region ap-south-1
+sam build --template-file infra/template.json --build-dir out/sam-routing-build
 ```
 
 Resolve validation errors before deployment approval. Cloud-side template validation and change-set review also remain pending.
