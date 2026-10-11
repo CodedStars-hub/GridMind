@@ -98,8 +98,8 @@ Performance and reliability:
 Usability:
 • A first-time user who is not on the team reaches a result with one click from the default and a BESS result with two more.
 • Exported JSON parses with a standard JSON parser and contains all required fields.
-Judging alignment (from the hackathon page): real problem and who benefits (idea and impact); AWS deployed (built on AWS); clear for a non-expert (design); every shown feature works (execution); 3-minute recorded video (demo).
-13. Demo Flow (3-minute recorded video; there is no live demo)
+Judging alignment (from the hackathon page): real problem and who benefits (idea and impact); AWS deployed (built on AWS); clear for a non-expert (design); every shown feature works (execution); recorded video (demo).
+13. Demo Flow (recorded video demonstration; there is no live demo)
 • 0:00-0:25 Problem. One planner, one request for a 50 kW charging hub. Show the two limits (voltage band, hot-spot) in plain words.
 • 0:25-1:10 Unmitigated. Default scenario, click Run. Walk through the charts and red alerts, reading the values from the screen. Show aging factor and insulation life.
 • 1:10-2:00 Mitigated. Click Find minimum BESS. Show before/after, SOC chart, BESS size, and the upgrade-vs-BESS cost comparison, including an honest case where upgrade wins if one exists in the presets.
@@ -114,7 +114,7 @@ Record a clean take the day before submission; rehearse the exact click path.
 • Deployment: AWS SAM, single stack, ap-south-1, one deploy script (stack deploy, build, bucket sync, cache invalidation).
 • Validation: enum-only input validation server-side; API throttling; CORS allow-list.
 • Tests: unit tests for thermal reference case, aging factor, power-flow sanity, BESS energy balance; a batch smoke test over all combinations.
-• Submission extras: public deployed URL, repository, 3-minute video, and an AWS Builder Center blog post (eligible for the blog prize).
+• Submission extras: public deployed URL, repository, recorded video demonstration, and an AWS Builder Center blog post (eligible for the blog prize).
 15. Non-Functional Requirements
 • Usability: no install, no login, Chrome/Edge/Firefox desktop; sensible defaults; every chart labelled with units and limits.
 • Reliability: graceful errors for bad input; NaN or infinity never reaches a chart; cached fallback as above.

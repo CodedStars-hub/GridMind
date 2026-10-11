@@ -216,7 +216,7 @@ README with the architecture diagram, how to run locally, how to deploy, and the
 Demo script following the PRD flow, with a rule that every number is read from the screen.
 Capture the AWS evidence: IoT message arriving, the stack resources, and the dashboard.
 Draft the AWS Builder Center blog outline: problem, stack, and what fought back.
-Acceptance criteria: a teammate can deploy from the README alone; the recorded video is 3 minutes or less and shows the unmitigated, mitigated, and dispatch flow plus AWS; the repo has no secrets or stray files.
+Acceptance criteria: a teammate can deploy from the README alone; the recorded video demonstration shows the unmitigated, mitigated, and dispatch flow plus AWS; the repo has no secrets or stray files.
 Commands: the complete test suite, the deploy script, a final manual run in a clean browser profile.
 Do NOT change: any feature code. Stop all feature work before this milestone starts.
 Cut line if time runs short
