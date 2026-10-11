@@ -1,4 +1,4 @@
-# GridMind API Contract (v3)
+﻿# GridMind API Contract (v3)
 
 Single source of truth for request and response shapes. Engine, Lambda and frontend must all match this file. If a field changes, change this file first.
 
@@ -967,7 +967,7 @@ The document remains contract v3; `/v2` denotes the HTTP namespace, not a replac
 
 All responses have Content-Type application/json and Cache-Control no-store. OPTIONS on a known available route returns 204 with an empty body, Access-Control-Allow-Methods GET, POST, OPTIONS and Access-Control-Allow-Headers Content-Type. `GRIDMIND_ALLOWED_ORIGINS` is a JSON list of exact HTTP(S) origins, default `[]` (same-origin access only). Only an approved supplied Origin is reflected; credentialed CORS is not enabled. A disallowed Origin or preflight method/header returns 400 invalid_input naming origin/method/headers. Configured allowlists add Vary: Origin. No approved production frontend origin or deployed URL is inferred.
 
-Health means the application can import and load its bundled configuration, not that AWS dependencies, all simulation cases or real telemetry were checked. Config loads once per process from GRIDMIND_CONFIG_DIR or config beside the packaged handler; the repository config directory remains the local fallback. No result cache or precomputation is added. Logs retain one structured request record; internal tracebacks stay in logs and are never returned to clients. Model outputs and all engineering limitations in sections 10–12 apply unchanged.
+Health means the application can import and load its bundled configuration, not that AWS dependencies, all simulation cases or real telemetry were checked. Config loads once per process from GRIDMIND_CONFIG_DIR or config beside the packaged handler; the repository config directory remains the local fallback. No result cache or precomputation is added. Logs retain one structured request record; internal tracebacks stay in logs and are never returned to clients. Model outputs and all engineering limitations in sections 10-12 apply unchanged.
 
 
 ## M15 fixed-size battery simulation (local implementation; deployment pending)
@@ -1066,7 +1066,7 @@ Before recommending charge, infer nonnegative reactive demand from the simulated
 
 Reason codes: missing_data_idle, soc_outside_bounds_idle, engineering_interlock_idle, charge_grid_limit_idle, stress_relief, overnight_recharge, soc_or_policy_limit_idle. SOC outside resolved operating bounds interlocks to idle. Power and SOC presentation use existing four-decimal rounding. Recommendations do not feed back into the next replay record: the replay follows its independently computed scenario, not a closed-loop plant or live hardware.
 
-## M17 — Explicit precomputed simulation artifacts
+## M17 - Explicit precomputed simulation artifacts
 
 This is a static frontend artifact, not a new API route. Existing response shapes and physics are unchanged. `precomputed/scenarios.json` contains `schema_version` (integer, currently 1), `engine_version` (string), `generated_at` (UTC ISO timestamp), `model_sha256` (SHA-256 string), `source_hashes` (relative source/config paths mapped to SHA-256 strings), and `artifacts` (list of `{id: string, inputs: full echoed simulation inputs, result: existing full simulation result}`). No fields are nullable beyond the existing simulation contract. `result.meta.source` is `cached`; the UI labels it **precomputed**, never live.
 

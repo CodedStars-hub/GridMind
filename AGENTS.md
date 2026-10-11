@@ -1,4 +1,4 @@
-# GridMind: rules for the coding agent
+﻿# GridMind: rules for the coding agent
 
 GridMind is a browser-based digital twin of ONE 250 kVA distribution transformer.
 It simulates 24 hours (96 steps of 15 min): voltage, loading, IEEE C57.91 thermal
@@ -35,16 +35,16 @@ S3, CloudFront, IoT Core, Vite + React + TypeScript frontend.
 Run the checks listed in the prompt. For all future milestones, produce a concise,
 human-readable completion report with the main summary under approximately 200 words:
 
-### Milestone Summary — MXX: Milestone Name
+### Milestone Summary - MXX: Milestone Name
 
 **Status:** Completed / Partially completed / Blocked
 
 **What was built**
-- 3–6 short bullets describing actual implemented functionality.
+- 3-6 short bullets describing actual implemented functionality.
 - Mention important files or modules only when useful.
 
 **Technical decisions**
-- 2–4 bullets explaining important engineering decisions, assumptions or limitations.
+- 2-4 bullets explaining important engineering decisions, assumptions or limitations.
 
 **Tests**
 - Tests: X passed, Y failed.

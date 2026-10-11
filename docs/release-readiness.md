@@ -1,4 +1,4 @@
-# M18 release gate — local readiness, deployment requires approval
+﻿# M18 release gate - local readiness, deployment requires approval
 
 The Python 3.12 package includes M15 battery physics and M16 simulated telemetry/advisory dispatch. M17 artifacts are served by the frontend, not Lambda. The existing ANY root/greedy HTTP API routes forward every endpoint to the same handler with payload 2.0. Logs-only IAM, API-scoped invocation, exact-origin Lambda CORS, 1 request/second and burst 2 remain unchanged. No new cloud resource is needed.
 
@@ -26,7 +26,7 @@ git diff --check
 .venv/bin/python scripts/check_release.py --battery-power 100 --battery-energy 500 --initial-soc 80
 ```
 
-The supplied AWS URL is from the project context, not proof that the current M15–M17 package is deployed. Rebuild with the deployed endpoint if it changes. VITE variables are public build-time settings, never secrets. The checked-in samconfig.toml is preserved; explicit commands below do not depend on its deployment defaults.
+The supplied AWS URL is from the project context, not proof that the current M15-M17 package is deployed. Rebuild with the deployed endpoint if it changes. VITE variables are public build-time settings, never secrets. The checked-in samconfig.toml is preserved; explicit commands below do not depend on its deployment defaults.
 
 ## Deployment (instructions only; explicit approval required)
 

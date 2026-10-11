@@ -1,4 +1,4 @@
-# M11 SAM infrastructure — prepared locally, not deployed
+﻿# M11 SAM infrastructure - prepared locally, not deployed
 
 ## Scope and infrastructure
 
@@ -107,7 +107,7 @@ curl --fail-with-body -H 'Content-Type: application/json' -d '{"ev_kw":50,"pv_kw
 .venv/bin/python -c 'import json; from pathlib import Path; local=json.loads(Path("out/local-response.json").read_text()); cloud=json.loads(Path("out/cloud-result.json").read_text()); assert json.loads(local["body"]) == cloud; print("local/cloud simulation equal")'
 ```
 
-Validate the other responses against contract section 13 and record measured latency/payload sizes, especially hosting and both plan targets. Previous local warm observations were approximately 6.43 s for hosting and 8.66–8.87 s for planning; these are not Lambda guarantees. HTTP API's [maximum integration timeout is 30 seconds](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html). If cloud operations cannot reliably complete, report the limitation; do not add asynchronous infrastructure. Record a live URL only after all required smoke tests pass.
+Validate the other responses against contract section 13 and record measured latency/payload sizes, especially hosting and both plan targets. Previous local warm observations were approximately 6.43 s for hosting and 8.66-8.87 s for planning; these are not Lambda guarantees. HTTP API's [maximum integration timeout is 30 seconds](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html). If cloud operations cannot reliably complete, report the limitation; do not add asynchronous infrastructure. Record a live URL only after all required smoke tests pass.
 
 ## Rollback (requires its own explicit approval)
 

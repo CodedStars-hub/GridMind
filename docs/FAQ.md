@@ -1,4 +1,4 @@
-# GridMind Frequently Asked Questions (FAQ)
+﻿# GridMind Frequently Asked Questions (FAQ)
 
 Answering key technical, engineering, and architectural questions for judges and evaluators.
 
@@ -8,7 +8,7 @@ Answering key technical, engineering, and architectural questions for judges and
 **A**:
 1. **Cold-Start Latency**: Compiling heavy C-extensions like NumPy or SciPy inflates the AWS Lambda zip size from **~1 MB to 80+ MB**, introducing multi-second cold-start delays. With the standard library, GridMind boots in **< 300 ms** and executes warm in **< 40 ms**.
 2. **Zero Dependency Drift**: Standard-library code is ultra-reliable, never experiences upstream package breakage, and guarantees bit-for-bit numerical parity across local CLI, AWS Lambda, and testing environments.
-3. **Optimized Arithmetic**: For a 96-step time series over a single radial branch, standard library vector arithmetic in pure Python takes only milliseconds—vectorized C-libraries provide no measurable user-facing benefit at this scale.
+3. **Optimized Arithmetic**: For a 96-step time series over a single radial branch, standard library vector arithmetic in pure Python takes only milliseconds-vectorized C-libraries provide no measurable user-facing benefit at this scale.
 
 ---
 
@@ -23,7 +23,7 @@ Distribution grid operations are **safety-critical and legally governed by statu
 
 ### Q3: How does GridMind account for extreme Indian summer climates?
 **A**:
-Ambient temperature is a primary driver of transformer top-oil rise. GridMind models an illustrative 24-hour diurnal summer temperature curve reflecting northern Indian summers (Delhi / Rajasthan), where temperatures cycle from **30°C at night to 43°C–45°C during peak afternoon hours**. Combined with high baseline residential air conditioning demand, this creates the realistic stress conditions DISCOM engineers face.
+Ambient temperature is a primary driver of transformer top-oil rise. GridMind models an illustrative 24-hour diurnal summer temperature curve reflecting northern Indian summers (Delhi / Rajasthan), where temperatures cycle from **30°C at night to 43°C-45°C during peak afternoon hours**. Combined with high baseline residential air conditioning demand, this creates the realistic stress conditions DISCOM engineers face.
 
 ---
 

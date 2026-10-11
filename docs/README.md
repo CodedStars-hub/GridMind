@@ -1,4 +1,4 @@
-# GridMind Technical Documentation Directory
+﻿# GridMind Technical Documentation Directory
 
 Authoritative engineering, mathematical, cloud architectural, and hackathon evaluation documentation for the GridMind digital twin.
 
@@ -30,4 +30,4 @@ Authoritative engineering, mathematical, cloud architectural, and hackathon eval
 ## 4. Frontend & Planning
 - 💻 [**Frontend Architecture & Setup**](../frontend/README.md): React 19, strict TypeScript, Vite 8 proxy configuration, and network explorer.
 - 📋 [**Product Requirements Document (PRD v2)**](../planning/product-requirement.md): Problem definition, target personas, and MVP boundaries.
-- 🗺️ [**Implementation Plan**](../planning/implementationplan.md): Milestone roadmap (M1–M13) from physics foundations to interactive views.
+- 🗺️ [**Implementation Plan**](../planning/implementationplan.md): Milestone roadmap (M1-M13) from physics foundations to interactive views.
