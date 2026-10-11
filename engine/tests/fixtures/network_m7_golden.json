@@ -1,0 +1,40 @@
+[
+  {
+    "payload": {
+      "allocation": []
+    },
+    "sha256": "2f59c2f421d65f37c1a8e9114833aec1107460c32c8b9d54f724294c471be61a"
+  },
+  {
+    "payload": {
+      "allocation": [
+        {
+          "site_id": "S1",
+          "kw": 150,
+          "managed": false,
+          "cap_fraction": null
+        },
+        {
+          "site_id": "S6",
+          "kw": 50,
+          "managed": false,
+          "cap_fraction": null
+        }
+      ]
+    },
+    "sha256": "4e82e5ad20e850633daf6b47d7ff33ec20c5d11aacbaa73ff140b9bd27518463"
+  },
+  {
+    "payload": {
+      "allocation": [
+        {
+          "site_id": "S2",
+          "kw": 100,
+          "managed": true,
+          "cap_fraction": 0.8
+        }
+      ]
+    },
+    "sha256": "286195726e6cb2444f0ef5e9642f9e7e6548de4b7b1cbfd23ebf90bab65f044c"
+  }
+]
