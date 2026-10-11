@@ -24,14 +24,16 @@
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.3-06B6D4.svg?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Pytest](https://img.shields.io/badge/Pytest-Verified-0A9EDC.svg?style=for-the-badge&logo=pytest&logoColor=white)](https://pytest.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-d4af37.svg?style=for-the-badge)](LICENSE)
+[![Video Demo](https://img.shields.io/badge/Video_Demo-Google_Drive-EA4335.svg?style=for-the-badge)](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)
 
 <br />
 
+> 🎬 **Watch Project Video Walkthrough**: **[Complete 3-Minute Video Demonstration on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**  
 > ⚡ **Deployed Live on AWS ap-south-1 (Mumbai)**: Serverless API gateway with sub-second coupled AC power-flow & IEEE C57.91 thermal engine verified at **[`/v2/health`](https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health)**.
 
 <br />
 
-[Live API Health](https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health) · [Problem & Vision](#problem--vision) · [Why GridMind Wins](#why-gridmind-wins) · [Physics & Engineering Engine](#physics--engineering-engine) · [System Architecture](#system-architecture) · [Interactive Modules](#interactive-modules) · [API Specification](#api-specification) · [Quick Start](#quick-start) · [Project Structure](#project-structure) · [Documentation](#documentation) · [Judging Alignment](#judging-alignment)
+[🎬 Video Walkthrough](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link) · [Live API Health](https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health) · [Problem & Vision](#problem--vision) · [Why GridMind Wins](#why-gridmind-wins) · [Physics & Engineering Engine](#physics--engineering-engine) · [System Architecture](#system-architecture) · [Interactive Modules](#interactive-modules) · [API Specification](#api-specification) · [Quick Start](#quick-start) · [Project Structure](#project-structure) · [Documentation](#documentation) · [Judging Alignment](#judging-alignment)
 
 </div>
 
@@ -469,6 +471,7 @@ Authoritative engineering specifications, mathematical proofs, and deployment ru
 
 | Document | Purpose & Scope |
 | :--- | :--- |
+| 🎬 [**Video Demonstration**](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link) | 3-minute video presentation explaining the problem, IEEE C57.91 physics, and AWS serverless architecture |
 | 🏆 [**Judges & Evaluator Guide**](docs/JUDGES_GUIDE.md) | 3-minute video breakdown, rubric mapping (Waste & Energy track), and live cloud endpoint testing |
 | 🌱 [**Environmental Impact Assessment**](docs/ENVIRONMENTAL_IMPACT.md) | Quantified asset waste reduction (avoided copper/steel/oil scrap) and renewable hosting expansion |
 | 📖 [**API Contract v3**](docs/api-contract.md) | Single source of truth for all request/response schemas, enums, units, and error codes |
