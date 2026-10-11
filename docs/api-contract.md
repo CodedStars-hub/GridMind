@@ -238,7 +238,7 @@ Hosting capacity
 | `unmanaged_kw` | integer | kW | no | Largest uncontrolled charging level healthy on both day types |
 | `managed_kw` | integer | kW | no | Largest managed level healthy on both day types using the best configured cap fraction |
 
-Search in allocation_block_kw steps, from zero through hosting_search_max_kw, using each transformer's own load level, base archetype and ev_usage profile. Hosting is additional charging against existing base load, not spare capacity after the submitted allocation. Return zero if no positive candidate is healthy; managed candidates must also retain the configured minimum served energy percentage. Choose the cap yielding largest healthy capacity, breaking ties by highest served energy then highest cap fraction.
+Search in allocation_block_kw steps, from zero through hosting_search_max_kw, using each transformer's own load level, base archetype and ev_usage profile. Hosting is additional charging against existing base load, not spare capacity after the submitted allocation. Return zero if no positive candidate is healthy; managed candidates must also retain the configured minimum served energy percentage. Choose the cap yielding largest healthy capacity, breaking ties by highest served energy then highest cap fraction. These legacy fields are normalized profile scaling levels: unmanaged_kw equals coincident additional peak kW because the uncontrolled shape peaks at one; managed_kw does not equal the delivered peak after capping. M9's selected day diagnostics below distinguish them explicitly.
 
 Assessment totals
 
@@ -674,7 +674,7 @@ Arrays are shortened to three values for readability; transformer assessment det
 
 ## 10. M8 engine impact comparison
 
-`assess_impact(payload, config)` is an opt-in Python engine interface, not a new HTTP handler or route. Its request is exactly the section 3.7 allocation body. Existing `assess_network` and `/simulate` responses remain unchanged, including M7's null placeholders. M8 results live in the separate comparison below; hosting remains unimplemented.
+`assess_impact(payload, config)` is an opt-in Python engine interface, not a new HTTP handler or route. Its request is exactly the section 3.7 allocation body. Existing `assess_network` and `/simulate` responses remain unchanged, including M7's null placeholders. M8 results live in the separate comparison below; M9 hosting is available through the separate opt-in interface in section 11.
 
 Baseline means **existing neighbourhood demand without proposed EV charging**, represented by an empty allocation. EV means the submitted allocation, including its supplied managed caps. These are not the /plan “Unplanned installation (modelled)” baseline. Both scenarios use identical equipment, existing loads, weather, profiles, day weights and numerical settings. Baseline does not remove any separately modelled existing demand from the base load.
 
@@ -804,3 +804,78 @@ Neighbourhood impact totals
 | `ev_residential_connection_hours_proxy_per_month` | number | potential residential connection-h/month | yes | Same subset for EV |
 
 No aggregate percentage, averaged FAA, summed minimum voltage or predicted failure date is defined. Aggregate aging is explicitly a sum over separate assets, not the aging of one equivalent neighbourhood transformer. Invalid factors, timing, reference life, monetary assumptions, voltage limits, counts, identities or aligned series raise clear ValueError exceptions; allocation errors retain M7 InvalidInputError semantics.
+
+## 11. M9 engine hosting capacity
+
+`assess_hosting(config)` is an opt-in engine interface with no request body or HTTP route. Existing M7 and M8 interfaces and their JSON shapes remain unchanged (including M7's null hosting placeholder). This additive response supplies the section 3.7 hosting fields and diagnostics for future planning. It assesses existing load with zero proposed EV, not headroom remaining after an allocation. Neither site ceilings nor target selections constrain this electrical search; no installation locations are chosen.
+
+Unmanaged hosting capacity is the highest evaluated feasible **additional coincident charging peak**, in kW, on the configured discrete grid. At each step additional power equals candidate_kw times the transformer's evening/daytime normalized EV shape, whose maximum must be one. All profiles, load level, equipment, PF, weather and zero neighbourhood PV remain identical to baseline. Managed capacity retains the existing contract's profile scaling interpretation: candidate_kw is the uncontrolled peak; actual coincident demand is `days[day].additional_peak_kw`, not candidate_kw. Daily energy is distinct from both quantities. The managed grid estimates capacity under each configured cap, not a remedy or placement optimization.
+
+Both summer_weekday and weekend must satisfy voltage_min_pu <= voltage <= voltage_max_pu, loading_pct <= loading_info_pct and hotspot_c <= hotspot_warning_c at every step. The critical hot-spot limit is an additional diagnostic, already subsumed by the warning limit. Strict violations make candidates infeasible; equality is feasible, with no epsilon or display-rounding tolerance. No top-oil or aging operating limit exists in current config. Checks use unrounded second-pass engine series; chart alerts remain unchanged and can differ near rounded boundaries. Managed candidates also require at least min_served_energy_pct_for_managed on **each** day, using M7's cap/overnight redistribution unchanged. No battery model is used.
+
+The exhaustive bounded grid makes no monotonicity assumption and never stops at the first failure. allocation_block_kw and hosting_search_max_kw must be integer kW, resolution positive, bound non-negative and divisible by resolution. hosting_max_evaluations is a positive integer per-transformer candidate budget (one candidate covers both days), sufficient for 1 + (bound/resolution) × (1 + number of caps). Current settings are 10 kW, 300 kW and 151 evaluations. Cap fractions must be finite, strictly decreasing and in (0,1); numerical/window/energy settings are validated before simulation. Search is a resolution-limited estimate, not an exact continuous maximum. At the upper bound, capacity may be larger beyond the tested domain.
+
+Baseline is evaluated once through M7's empty-allocation precision interface. If either baseline day violates, both capacities are zero, selected and next_candidate are null, no positive search runs, and baseline.feasible is false with explicit violations: existing conditions require remediation. A baseline solver failure propagates PowerFlowError because compliance is unknown. Candidate solver failure yields an infeasible day with convergence_failed and no numerical margins; invalid configuration propagates ValueError. No baseline failure is presented as compliant.
+
+Managed ties use largest feasible profile scale, then the sum of the two days' unrounded served kWh, then highest cap fraction. No positive managed candidate leaves the feasible zero baseline selected (cap_fraction null). Next-candidate violations identify limiting factors at the next grid point for the chosen cap, not an exact mathematical binding surface. If baseline is violating, baseline violations are the limiting factors; if bound_reached, no beyond-bound claim is made.
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `meta` | object | none | no | Section 3.5 meta, inputs is empty object |
+| `hosting` | object | none | no | Transformers and totals below |
+| `hosting.transformers` | array of objects | none | no | Configured transformer order |
+| `hosting.totals` | object | none | no | Independent-branch summary below |
+| `assumptions` | array of objects | none | no | Section 3.1 name/value/unit/note items: search/managed settings, topology, transformer, limits, load levels and scenarios; profile arrays excluded |
+| `limitations` | array of strings | none | no | Resolution, scenario dependence, managed scaling, baseline policy and upstream limitations |
+
+Transformer hosting item:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `transformer_id` | string | identifier | no | Configured transformer |
+| `baseline` | candidate object | none | no | Zero additional EV, includes compliance and violations |
+| `hosting` | object | none | no | Exactly unmanaged_kw and managed_kw from section 3.7 |
+| `unmanaged` | search object | none | no | Uncontrolled search diagnostics |
+| `managed` | search object | none | no | Best configured-cap search diagnostics |
+| `evaluations` | integer | candidates | no | Includes reused baseline, excludes other transformers; each candidate evaluates two days |
+
+Search object:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `selected` | candidate or null | none | yes | Highest evaluated feasible candidate, or null for violating baseline |
+| `next_candidate` | candidate or null | none | yes | Next configured increment within that search; includes its tested cap even when only zero was selected; null at bound or violating baseline |
+| `bound_reached` | boolean | none | no | Selected candidate equals configured upper bound |
+
+Candidate object:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `transformer_id` | string | identifier | no | Associated branch |
+| `candidate_kw` | number | kW of uncontrolled peak | no | Profile scale; integer in search responses |
+| `cap_fraction` | number or null | fraction | yes | Configured cap, or null for uncontrolled/zero baseline |
+| `feasible` | boolean | none | no | Both days have no constraint violation |
+| `days` | object | none | no | Exactly summer_weekday and weekend diagnostic objects |
+| `violations` | array of objects | none | no | Each has scenario (string, day identity) and constraint (string, exact config key or convergence_failed); may be empty |
+
+Day diagnostic:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `additional_peak_kw` | number | kW | no | Maximum actual additional served coincident power on this day |
+| `served_energy_kwh` | number | kWh/day | no | Integral of additional served charging |
+| `served_energy_pct` | number | % of uncontrolled energy | no | Full precision fraction × 100; zero-demand baseline uses 100 |
+| `margins` | array of objects | mixed, below | no | Operating limits and, when managed, energy retention; empty electrical margins on solver failure |
+| `violations` | array of strings | constraint keys | no | Strictly violated keys, or convergence_failed |
+
+Each margin has `constraint` (non-null string, exact config key), `value` (non-null number), `limit` (non-null number from config), `margin` (non-null number, signed headroom) and `unit` (non-null string: p.u., %, or °C). Voltage-min and energy margins are value minus limit; other margins are limit minus value. Margin/value/limit share the indicated units. Diagnostics round to four decimals only after decisions; a tiny violating margin may display as zero, so feasible/violations are authoritative.
+
+| Totals field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `transformers_assessed` | integer | transformers | no | Number of branch results |
+| `compliant_baselines` | integer | transformers | no | Baseline feasible on both days |
+| `violating_baselines` | integer | transformers | no | Baseline infeasible on either day |
+| `positive_unmanaged_capacity` | integer | transformers | no | Strictly positive uncontrolled capacity |
+| `independent_unmanaged_kw` | integer | kW | no | Sum of independent uncontrolled capacities; not a validated simultaneous upstream network capacity |
+
+Every branch currently shares the nameplate/electrical config by explicit topology assumption; own load archetype, level, charging timing and thermal state are retained. No individual equipment overrides exist. The sum does not evaluate a shared upstream feeder, source loading or inter-transformer voltage coupling. Results are scenario-dependent planning estimates, not utility interconnection approval or a full feeder study.

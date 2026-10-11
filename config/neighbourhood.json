@@ -168,6 +168,11 @@
       "unit": "kW",
       "assumption": "assumption: illustrative bounded hosting search ceiling; editable planning input"
     },
+    "hosting_max_evaluations": {
+      "value": 151,
+      "unit": "candidate evaluations per transformer; each covers both representative days",
+      "assumption": "assumption: illustrative numerical search budget; covers one baseline plus 30 positive grid points for unmanaged and each of four configured managed caps; increase with a larger grid"
+    },
     "month_weekday_count": {
       "value": 22,
       "unit": "days",
