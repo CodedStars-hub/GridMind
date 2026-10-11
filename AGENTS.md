@@ -16,8 +16,17 @@ S3, CloudFront, IoT Core, Vite + React + TypeScript frontend.
 5. docs/api-contract.md is the single source of truth for all JSON shapes. If a change is
    needed, update the doc in the same change and flag it.
 6. One engine, used everywhere (Lambda, scripts, CLI, tests). Never reimplement physics elsewhere.
-7. Do not make git commits. Do not install anything globally. Do not run cloud, deploy, npm
-   or docker commands unless the prompt says so. Ask before installing anything.
+7. Do not install anything globally. Do not run cloud, deploy, npm or docker commands unless the prompt says so. Ask before installing anything.
+
+## Git workflow
+- Work only on the branch the prompt names (mNN-short-name). Never commit to main. If you are not on that branch, stop.
+- Commit after each logical task, once its tests pass. Use Conventional Commits: `type(scope): imperative summary`
+  (feat, fix, test, docs, chore, refactor), subject under 72 characters, a short body when the why is not obvious.
+- Stage files explicitly by path. Never use `git add .` or `git add -A`.
+- Never commit .venv, caches, .env, credentials, AWS config, or large generated output.
+- Never amend, rebase, force-push, merge, tag, or push. The human does those.
+- If a commit is blocked by the sandbox, do not work around it. Print the exact git add and git commit commands, in order, for the human to run.
+- The final report must include `git log --oneline main..HEAD`.
 8. The reviewer is a beginner learning as they go: small files, plain-English comments.
 9. If the prompt is ambiguous, pick the simplest option and list it under "Decisions and ambiguities".
 10. Never print, request, or store credentials or API keys.
