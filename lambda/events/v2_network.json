@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/v2/network",
+  "requestContext": {
+    "http": {
+      "method": "GET"
+    }
+  },
+  "headers": {},
+  "body": null,
+  "isBase64Encoded": false
+}

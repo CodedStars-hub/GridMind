@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/v2/assess",
+  "requestContext": {
+    "http": {
+      "method": "POST"
+    }
+  },
+  "headers": {},
+  "body": "{\"allocation\": [{\"site_id\": \"S1\", \"kw\": 10, \"managed\": false, \"cap_fraction\": null}]}",
+  "isBase64Encoded": false
+}

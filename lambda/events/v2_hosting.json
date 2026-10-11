@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/v2/hosting",
+  "requestContext": {
+    "http": {
+      "method": "POST"
+    }
+  },
+  "headers": {},
+  "body": "{}",
+  "isBase64Encoded": false
+}

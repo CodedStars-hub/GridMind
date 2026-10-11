@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/v2/plan",
+  "requestContext": {
+    "http": {
+      "method": "POST"
+    }
+  },
+  "headers": {},
+  "body": "{\"target_kw\": 300}",
+  "isBase64Encoded": false
+}
