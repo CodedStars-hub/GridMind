@@ -82,3 +82,11 @@ Compute in full precision, round series to four decimals, then derive summaries 
 Alert thresholds are strict: voltage below the minimum or above the maximum is warning; hot-spot above the warning threshold up to and including the critical threshold is warning; hot-spot above the critical threshold is critical; loading above its information threshold is info. Warning and critical hot-spot step sets are disjoint. Consecutive steps merge into inclusive events without crossing midnight, sorted by start step then type. Low-voltage events use their minimum voltage as peak; other events use their maximum.
 
 Any warning or critical alert gives `violations_found`, meaning violations exist and no BESS analysis has been run. Otherwise the verdict is `safe`; info alerts alone do not change it. BESS is not simulated yet: automatic mode and overrides raise NotImplementedError until M8, and all BESS and cost result fields are null.
+
+## Network assessment (M7)
+
+Each configured transformer is assessed as an independent copy of the same single-branch electrical model, with separate thermal state. All six share the nameplate and feeder parameters explicitly assigned by neighbourhood.json; their archetype, load level, attached sites and charging usage select distinct input series. No shared upstream voltage interaction is modelled. No installed neighbourhood PV is specified, so its generation is zero; the legacy PV scenarios remain unchanged.
+
+Assess summer_weekday and weekend, preserve the existing two-pass warm-up and four-decimal chart semantics, and classify the transformer by the worse day. Overloaded means critical hot-spot or loading above the configured rated-current information threshold; watch means another warning; otherwise healthy. Household exposure, monthly life/cost and hosting are not calculated in M7 and are explicitly null. Insulation aging is modelled acceleration, not measured remaining life; voltage alerts do not establish appliance damage.
+
+Managed charging evaluates the requested configured cap: clip the site series, then fill off-peak headroom in chronological daily-index order. Any excess that cannot fit is unserved. It neither creates energy nor chooses an optimal cap. Peak served charging is the maximum simultaneous sum across sites, and energy integrates that sum using configured step duration.
