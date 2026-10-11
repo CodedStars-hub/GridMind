@@ -104,6 +104,11 @@ def simulate_day(inputs, config):
 
 
 def simulate_load_series(loads: LoadSeries, config: dict, input_echo: dict) -> dict:
+    """Return the unchanged chart-facing daily result."""
+    return simulate_load_series_with_precision(loads, config, input_echo)[0]
+
+
+def simulate_load_series_with_precision(loads: LoadSeries, config: dict, input_echo: dict) -> tuple[dict, dict]:
     """Run the shared physics on supplied powers; preserve legacy output semantics.
 
     This internal engine interface bypasses request enums, not numerical checks.
@@ -151,17 +156,20 @@ def simulate_load_series(loads: LoadSeries, config: dict, input_echo: dict) -> d
         'net_kw': [b + e - p for b, e, p in zip(loads.base_kw, loads.ev_kw, loads.pv_kw)],
         **recorded,
     }
+    raw_series = deepcopy(series)
     for name, values in series.items():
         if name != 'time':
             series[name] = [round(value, ROUND_DIGITS) for value in values]
     series.update(bess_kw=None, bess_soc_pct=None)
     summary = _summary(series, step_minutes, aging_params)
     alerts = detect_alerts(series['time'], series['voltage_pu'], series['loading_pct'], series['hotspot_c'], config['limits'])
-    return {
+    result = {
         'meta': dict(inputs=deepcopy(input_echo), engine_version=__version__, source='live'),
         'series': series, 'summary': summary, 'alerts': alerts,
         'verdict': _verdict(alerts, config['limits']), 'bess': None, 'cost': None,
     }
+
+    return result, raw_series
 
 
 def run_simulation(payload, config):

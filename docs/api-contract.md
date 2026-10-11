@@ -671,3 +671,136 @@ Arrays are shortened to three values for readability; transformer assessment det
   }
 }
 ```
+
+## 10. M8 engine impact comparison
+
+`assess_impact(payload, config)` is an opt-in Python engine interface, not a new HTTP handler or route. Its request is exactly the section 3.7 allocation body. Existing `assess_network` and `/simulate` responses remain unchanged, including M7's null placeholders. M8 results live in the separate comparison below; hosting remains unimplemented.
+
+Baseline means **existing neighbourhood demand without proposed EV charging**, represented by an empty allocation. EV means the submitted allocation, including its supplied managed caps. These are not the /plan “Unplanned installation (modelled)” baseline. Both scenarios use identical equipment, existing loads, weather, profiles, day weights and numerical settings. Baseline does not remove any separately modelled existing demand from the base load.
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `meta` | object | none | no | Section 3.5 meta; inputs is the submitted allocation body |
+| `baseline` | object | none | no | Complete unchanged M7 response, with meta.inputs.allocation empty |
+| `ev` | object | none | no | Complete unchanged M7 response for proposed allocation |
+| `impact` | object | none | no | Comparison of unrounded records from those same engine runs |
+| `impact.transformers` | array of objects | none | no | One impact item per configured transformer, in config order |
+| `impact.totals` | object | mixed, below | no | Defined sums only; no sum of percentages or extrema |
+| `assumptions` | array of objects | none | no | Section 3.1 name/value/unit/note items for reference life, calendar year, limits, valuation, day weights, nominal voltage, topology counts and timing |
+| `limitations` | array of strings | none | no | Interpretation limits: modelled aging, illustrative valuation, connection-point proxy, unknown household counts and independent branches |
+
+M8 integrates unrounded FAA and uses unrounded voltage/hot-spot values retained from the final daily pass. No physics is recomputed in an impact module. Existing chart-facing series, summaries and alerts still follow section 4 rounding. Small differences between impact exposure counts and legacy chart alerts can therefore occur near rounded thresholds. Impact values are rounded only at the response boundary: floating-point metrics to four decimals, INR to nearest integer using Python's ties-to-even rounding. Totals are calculated before rounding individual contributions, so rounded totals can differ slightly from sums of displayed values. Undefined percentage changes are null; signed additional values are never clamped.
+
+Transformer impact item
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `transformer_id` | string | identifier | no | Same id in both scenarios and configured topology |
+| `life` | object | none | no | Daily and monthly reference-equivalent aging comparison |
+| `economic` | object | none | no | Illustrative monthly aging valuation |
+| `household` | object | none | no | Potential exposure proxy, not appliance damage |
+
+`life.days` has exactly summer_weekday and weekend keys, each with the following fields. `life.month` uses the monthly fields below.
+
+| Daily field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `baseline_equivalent_aging_hours` | number | reference-equivalent h/day | no | Sum of baseline FAA × step_minutes / 60 |
+| `ev_equivalent_aging_hours` | number | reference-equivalent h/day | no | Sum of EV FAA × step_minutes / 60 |
+| `additional_equivalent_aging_hours` | number | reference-equivalent h/day, signed | no | EV minus baseline |
+| `baseline_aging_ratio` | number | ratio | no | Baseline equivalent hours / simulated calendar hours |
+| `ev_aging_ratio` | number | ratio | no | EV equivalent hours / simulated calendar hours |
+| `aging_change_pct` | number | %, signed | yes | 100 × additional / baseline; null for zero baseline |
+| `baseline_peak_hotspot_c` | number | °C | no | Maximum unrounded baseline hot-spot |
+| `ev_peak_hotspot_c` | number | °C | no | Maximum unrounded EV hot-spot |
+| `peak_hotspot_change_c` | number | °C, signed | no | EV peak minus baseline peak; no Celsius percentage ratio |
+
+| Monthly field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `calendar_days` | integer | days/month | no | Configured weekday_count + weekend_count |
+| `baseline_equivalent_aging_hours` | number | reference-equivalent h/month | no | Weekday count × baseline weekday hours + weekend count × baseline weekend hours |
+| `ev_equivalent_aging_hours` | number | reference-equivalent h/month | no | Same weighting of EV results |
+| `additional_equivalent_aging_hours` | number | reference-equivalent h/month, signed | no | EV minus baseline; repeated identical days reduce to daily difference × calendar_days |
+| `baseline_reference_equivalent_years` | number | reference-equivalent years/month | no | Baseline equivalent hours / (calendar day hours × calendar_days_per_year) |
+| `ev_reference_equivalent_years` | number | reference-equivalent years/month | no | Same conversion for EV |
+| `additional_reference_equivalent_years` | number | reference-equivalent years/month, signed | no | Additional hours using that same conversion |
+| `baseline_aging_ratio` | number | ratio | no | Baseline monthly equivalent hours / monthly calendar hours |
+| `ev_aging_ratio` | number | ratio | no | EV monthly equivalent hours / monthly calendar hours |
+| `aging_change_pct` | number | %, signed | yes | 100 × monthly additional hours / baseline hours; null for zero baseline |
+
+Daily records must span a full calendar day. Calendar day duration follows configured step_minutes × steps_per_day; calendar_days_per_year is 365 in limits config, explicitly ignoring leap years. These are reference-equivalent aging quantities, not actual calendar service life lost, remaining life or failure dates.
+
+Economic fields
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `replacement_value_inr` | integer | INR | no | Existing transformer_upgrade_cost_inr used as an explicit equipment valuation proxy, not a replacement quote |
+| `reference_insulation_life_hours` | number | reference-equivalent h | no | normal_insulation_life_hours from limits config |
+| `baseline_reference_life_fraction` | number | fraction | no | Baseline monthly equivalent hours / reference life |
+| `ev_reference_life_fraction` | number | fraction | no | EV monthly equivalent hours / reference life |
+| `additional_reference_life_fraction` | number | fraction, signed | no | Additional monthly equivalent hours / reference life |
+| `baseline_aging_proxy_inr` | integer | INR/month | no | Baseline fraction × configured valuation |
+| `ev_aging_proxy_inr` | integer | INR/month | no | EV fraction × configured valuation |
+| `additional_aging_proxy_inr` | integer | INR/month, signed | no | Additional fraction × configured valuation |
+
+Missing/null valuation or reference-life assumptions are rejected with ValueError naming the parameter; no monetary default is substituted. Values must be finite, valuation non-negative and reference life positive. Fractions are not capped at one. This proxy is not guaranteed replacement cost, maintenance spending, repair cost or real financial loss.
+
+`household.baseline` and `household.ev` each contain summer_weekday and weekend exposure objects, plus a month object. Daily exposure objects:
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `min_voltage_pu` | number | p.u. | no | Modelled connection-point minimum |
+| `min_voltage_v` | number | V | no | Minimum p.u. × configured nominal_home_voltage_v; household-voltage proxy |
+| `violation_steps` | integer | samples | no | Strictly outside voltage_min_pu..voltage_max_pu |
+| `violation_intervals` | integer | events | no | Runs of consecutive outside-limit samples; no midnight merging; adjacent low/high samples belong to one outside-limit run |
+| `voltage_low_steps` | integer | samples | no | Voltage strictly below minimum |
+| `voltage_high_steps` | integer | samples | no | Voltage strictly above maximum |
+| `hours_outside_limits` | number | h/day | no | violation_steps × step_minutes / 60 |
+| `hours_below_limit` | number | h/day | no | voltage_low_steps × step_minutes / 60 |
+| `maximum_undervoltage_deviation_pu` | number | p.u. | no | Maximum shortfall below lower limit, or zero; not deviation from nominal |
+| `outside_limits_pct` | number | % of simulated time | no | 100 × violation_steps / number of samples |
+| `connections` | integer | customer connections | yes | Configured count; null if unavailable to pure comparison |
+| `connections_potentially_exposed` | integer | customer connections | yes | Count once if this day has any outside-limit step; otherwise zero; null if count unknown |
+| `connection_hours` | number | customer-h/day | yes | connections × hours_outside_limits; null if count unknown |
+| `residential_connections_proxy` | integer | potential residential connections | yes | Customer count only for a residential archetype; not a measured household count |
+| `residential_connections_potentially_exposed_proxy` | integer | potential residential connections | yes | Exposure count for residential archetypes; unknown for commercial/mixed or missing counts |
+| `residential_connection_hours_proxy` | number | potential residential connection-h/day | yes | Exposure hours for residential archetypes; unknown otherwise |
+| `proxy` | boolean | none | no | Always true; service drops and appliance susceptibility are not modelled |
+
+Monthly exposure fields
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `hours_outside_limits` | number | h/month | no | Weighted weekday and weekend outside-limit hours |
+| `connections_potentially_exposed` | integer | customer connections | yes | Count once if either representative day with nonzero monthly weight violates; never sum day counts |
+| `connection_hours` | number | customer-h/month | yes | connections × monthly outside-limit hours |
+| `residential_connections_potentially_exposed_proxy` | integer | potential residential connections | yes | Same count for residential archetypes only |
+| `residential_connection_hours_proxy` | number | potential residential connection-h/month | yes | Same hours for residential archetypes only |
+
+`household.additional_connection_hours_per_month` is number or null, unit customer-h/month, EV monthly connection-hours minus baseline; it is signed, and null if counts are unknown.
+
+Counts represent disjoint transformer customer groups as an illustrative topology assumption. They are never multiplied by the number of charging sites, added once per violating interval, or counted separately for both day types. Residential proxy totals cover **residential archetypes only**, excluding unknown residential shares of commercial/mixed customers. Missing counts propagate null totals rather than partial sums. The pure comparison supports missing counts; the existing M7 simulation adapter still requires valid configured customer counts. Potential exposure establishes neither appliance damage nor failed households.
+
+Neighbourhood impact totals
+
+| Field | Type | Unit | Nullable | Meaning |
+|---|---|---|---|---|
+| `baseline_equivalent_aging_hours_per_month` | number | reference-equivalent transformer-h/month | no | Sum of individual asset aging hours |
+| `ev_equivalent_aging_hours_per_month` | number | reference-equivalent transformer-h/month | no | Same sum for EV |
+| `additional_equivalent_aging_hours_per_month` | number | reference-equivalent transformer-h/month, signed | no | Sum of individual additional hours |
+| `baseline_reference_equivalent_years_per_month` | number | reference-equivalent transformer-years/month | no | Sum of individual baseline equivalents |
+| `ev_reference_equivalent_years_per_month` | number | reference-equivalent transformer-years/month | no | Same sum for EV |
+| `additional_reference_equivalent_years_per_month` | number | reference-equivalent transformer-years/month, signed | no | Sum of individual additional equivalents |
+| `baseline_aging_proxy_inr_per_month` | integer | INR/month | no | Sum of unrounded baseline valuations, then round |
+| `ev_aging_proxy_inr_per_month` | integer | INR/month | no | Same sum for EV |
+| `additional_aging_proxy_inr_per_month` | integer | INR/month, signed | no | Sum of unrounded additional valuations, then round |
+| `baseline_connections_potentially_exposed_per_month` | integer | customer connections | yes | Sum of unique transformer customer groups potentially exposed |
+| `ev_connections_potentially_exposed_per_month` | integer | customer connections | yes | Same count for EV |
+| `baseline_connection_hours_per_month` | number | customer-h/month | yes | Sum of baseline customer-hours |
+| `ev_connection_hours_per_month` | number | customer-h/month | yes | Sum of EV customer-hours |
+| `additional_connection_hours_per_month` | number | customer-h/month, signed | yes | EV minus baseline |
+| `baseline_residential_connections_potentially_exposed_proxy_per_month` | integer | potential residential connections | yes | Residential-archetype subset only |
+| `ev_residential_connections_potentially_exposed_proxy_per_month` | integer | potential residential connections | yes | Same subset for EV |
+| `baseline_residential_connection_hours_proxy_per_month` | number | potential residential connection-h/month | yes | Residential-archetype subset only |
+| `ev_residential_connection_hours_proxy_per_month` | number | potential residential connection-h/month | yes | Same subset for EV |
+
+No aggregate percentage, averaged FAA, summed minimum voltage or predicted failure date is defined. Aggregate aging is explicitly a sum over separate assets, not the aging of one equivalent neighbourhood transformer. Invalid factors, timing, reference life, monetary assumptions, voltage limits, counts, identities or aligned series raise clear ValueError exceptions; allocation errors retain M7 InvalidInputError semantics.

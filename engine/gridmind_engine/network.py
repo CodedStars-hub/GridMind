@@ -10,7 +10,7 @@ import math
 
 from . import __version__
 from .profiles import MINUTES_PER_HOUR, build_load_series
-from .simulate import ROUND_DIGITS, simulate_load_series
+from .simulate import ROUND_DIGITS, simulate_load_series, simulate_load_series_with_precision
 from .validate import InvalidInputError, ValidatedInputs
 
 BASE_PROFILES = {
@@ -183,6 +183,16 @@ def _status(simulation, limits):
 
 
 def assess_network(payload: dict, config: dict) -> dict:
+    """Return the unchanged M7 assessment without impact calculations."""
+    return _assess_network(payload, config, include_precision=False)[0]
+
+
+def assess_network_with_precision(payload: dict, config: dict) -> tuple[dict, dict]:
+    """Return M7 assessment plus unrounded weekday/weekend series, keyed by id."""
+    return _assess_network(payload, config, include_precision=True)
+
+
+def _assess_network(payload, config, *, include_precision):
     """Assess all branches on summer weekday and weekend using shared physics.
 
     Later monthly, household and hosting fields are explicitly null, not estimates.
@@ -191,14 +201,23 @@ def assess_network(payload: dict, config: dict) -> dict:
     allocation = validate_allocation(payload, config)
     transformers, sites = _network_data(config)
     results, weekday_charging, all_days = [], [], []
+    raw_by_transformer = {}
     rank = {'healthy': 0, 'watch': 1, 'overloaded': 2}
     for transformer in transformers:
         days = []
+        raw_days = {}
         for day_type in ('summer_weekday', 'weekend'):
             loads, echo = transformer_load_series(transformer, allocation, sites, day_type, config)
-            days.append(simulate_load_series(loads, config, echo))
+            if include_precision:
+                result, raw = simulate_load_series_with_precision(loads, config, echo)
+                days.append(result)
+                raw_days[day_type] = raw
+            else:
+                days.append(simulate_load_series(loads, config, echo))
             if day_type == 'summer_weekday':
                 weekday_charging.append(loads.ev_kw)
+        if include_precision:
+            raw_by_transformer[transformer['id']] = raw_days
         weekday, weekend = days
         all_days.extend(days)
         status = max((_status(day, config['limits']) for day in days), key=rank.get)
@@ -218,5 +237,6 @@ def assess_network(payload: dict, config: dict) -> dict:
         served_kw_peak=round(max(coincident), ROUND_DIGITS),
         served_energy_kwh_per_day=round(math.fsum(coincident) * duration, ROUND_DIGITS),
     )
-    return dict(meta=dict(engine_version=__version__, source='live', inputs=deepcopy(payload)),
-                assessment=dict(transformers=results, totals=totals))
+    result = dict(meta=dict(engine_version=__version__, source='live', inputs=deepcopy(payload)),
+                  assessment=dict(transformers=results, totals=totals))
+    return result, raw_by_transformer
