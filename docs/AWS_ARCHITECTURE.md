@@ -168,4 +168,6 @@ GridMind's adoption of AWS is not merely a deployment detail - it is a fundament
 3. **Amazon S3** guarantees continuous operation even during edge network disconnects.
 4. **AWS IoT Core** transforms a theoretical simulation model into an actionable, real-time demand response dispatch system.
 
+> 🎬 **Project Video Demonstration**: Watch our 3-minute evaluation video explaining the live AWS architecture, latency benchmarks, and edge dispatch: **[Watch on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**
+
 For a full walkthrough of our deployment configuration and IAM policies, see [infra/README.md](../infra/README.md) and [infra/template.json](../infra/template.json).

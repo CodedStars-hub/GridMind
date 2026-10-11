@@ -2,6 +2,8 @@
 
 Deterministic, reproducible runbook for testing and validating the GridMind digital twin across local engine, Lambda invoker, frontend, and cloud tiers.
 
+> 🎬 **Video Demonstration**: Watch the complete 3-minute video walkthrough demonstrating local runs and live AWS execution: **[Watch on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**
+
 ---
 
 ## 1. Engine Verification (Python 3.12)

@@ -1,4 +1,4 @@
-﻿# GridMind Environmental Impact & Sustainability Assessment
+# GridMind Environmental Impact & Sustainability Assessment
 
 **WeMakeDevs Environmental Hacks 2026** · **Track: Waste & Energy**  
 *Decoupling Clean Energy Acceleration from Physical Asset Waste.*
@@ -15,6 +15,8 @@ Across urban India and developing economies, distribution utilities (**DISCOMs**
 1. **Preventing Physical Hardware Waste**: Mitigating thermal hot-spots to extend transformer longevity, averting the premature scrap and disposal of metric tons of electrical steel, copper, and toxic insulating mineral oil.
 2. **Eliminating Clean Energy Bottlenecks**: Providing time-resolved hosting capacity analytics that allow utilities to safely approve rooftop solar and EV charging interconnections that would otherwise be rejected.
 3. **Optimizing Energy Efficiency**: Reducing severe $I^2 R$ non-linear copper losses that occur when transformers operate in extreme overload conditions.
+
+> 🎬 **Project Video Demonstration**: Watch our 3-minute video presentation explaining the environmental crisis and GridMind's solution: **[Watch on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**
 
 ---
 
