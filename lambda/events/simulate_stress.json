@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/simulate",
+  "requestContext": {
+    "http": {
+      "method": "POST"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"ev_kw\": 100, \"pv_kwp\": 0, \"day_type\": \"summer_weekday\", \"load_level\": \"critical\"}",
+  "isBase64Encoded": false
+}

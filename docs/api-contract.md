@@ -35,6 +35,8 @@ Any other value is rejected with `invalid_input` and the offending field name.
 
 ## 3. Routes
 
+**M4 local adapter notes:** Paths accept one optional leading `/api` segment and a trailing slash. All responses carry `Content-Type: application/json` and `Cache-Control: no-store`. The decoded request body limit is 2048 UTF-8 bytes. `/simulate` with a battery option currently returns 400 `invalid_input` with field `bess` until M8. `/optimize` and `/dispatch` return 404 `not_found` until M9 and M11 respectively. `/scenarios` assumptions cover parameters from transformer, limits, costs, bess and load_levels only, excluding scenarios and profiles. Internal errors always use the fixed public message `internal error`.
+
 **Request validation rules:** The shared validator requires `ev_kw`, `pv_kwp`, `day_type`, and `load_level`. `bess` is optional (default `off` from scenarios config); `bess_override` is optional (default null). EV and PV selections must be exact integers, excluding booleans and floats; day, load level and BESS choices must be exact strings from config. An override must contain exactly `power_kw` and `energy_kwh`, each finite and positive, with integer or float type excluding booleans; no upper bounds yet. Unknown keys are rejected. Failures use `invalid_input` with the offending `field` named (nested override fields use `bess_override.<key>`; a non-object payload uses `payload`). Route-specific request rules below still apply.
 
 Common request body for the POST routes (the "scenario"):

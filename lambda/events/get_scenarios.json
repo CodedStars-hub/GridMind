@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/scenarios",
+  "requestContext": {
+    "http": {
+      "method": "GET"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "",
+  "isBase64Encoded": false
+}

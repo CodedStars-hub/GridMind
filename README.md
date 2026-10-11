@@ -31,7 +31,7 @@ pytest engine/tests
 
 No installation of the engine is needed: `pytest.ini` puts `engine/` on the Python path.
 
-Current status: M0 to M3b complete
+Current status: M0 to M4 complete
 
 Engine code must stay compatible with Python 3.12. Do not use syntax or standard-library features newer than 3.12.
 
@@ -42,3 +42,11 @@ Activate `.venv` first, then run from the repository root:
 PYTHONPATH=engine python -m gridmind_engine.cli --ev 50 --pv 30 --day summer_weekday --load heavy --summary
 ```
 Omit `--summary` for JSON; use `--pretty` for indented JSON or `--out FILE` to save output.
+
+## Invoke the handler locally
+
+With `.venv` active, run from the repository root:
+```bash
+python scripts/invoke_local.py lambda/events/simulate_default.json --summary
+```
+Use `get_scenarios.json --pretty` to inspect the choices and assumptions. This handler is local only.
