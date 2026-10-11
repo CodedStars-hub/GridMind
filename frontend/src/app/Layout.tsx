@@ -1,3 +1,4 @@
+import { BrandLogo } from '../components/BrandLogo';
 import { Icon } from '../components/Icon';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useData } from './DataProvider';
@@ -35,9 +36,7 @@ export function Layout({ path, children }: { path: string; children: ReactNode }
       <aside className="sidebar">
         <a className="brand" href="#/" aria-label="GridMind overview">
           <span className="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 32 32">
-              <path d="M9 4h14v8H9zM4 20h9v8H4zM19 20h9v8h-9zM16 12v5M8 17h16M8 17v3M24 17v3" />
-            </svg>
+            <BrandLogo />
           </span>
           <span>
             GridMind
