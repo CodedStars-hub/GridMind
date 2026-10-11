@@ -5,7 +5,7 @@
 
 <br />
 
-> 🎬 **Official Video Demonstration**: Watch our 3-minute project walkthrough explaining the engineering, physics, and live AWS architecture: **[Watch on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**  
+> 🎬 **Official Video Demonstration**: Watch our project walkthrough explaining the engineering, physics, and live AWS architecture: **[Complete Video Demonstration on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**  
 > ⚡ **Quick Evaluator Verification**: The serverless backend is live in `ap-south-1` (Mumbai).  
 > Test live API health directly: **[`https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health`](https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health)**
 
@@ -32,11 +32,11 @@ Across cities in India and developing nations, distribution utilities (DISCOMs) 
 
 ---
 
-## 3. Recommended 3-Minute Video Demo Flow
+## 3. Recommended Video Demo Flow
 
-> 🎬 **Direct Video Link**: **[Watch the Complete 3-Minute Video Demonstration on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**
+> 🎬 **Direct Video Link**: **[Watch the Complete Video Demonstration on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**
 
-If evaluating our recorded 3-minute video submission, here is the exact narrative structure:
+If evaluating our recorded video submission, here is the exact narrative structure:
 
 ```text
 [0:00 - 0:35] Problem Definition:

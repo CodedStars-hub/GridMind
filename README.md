@@ -28,7 +28,7 @@
 
 <br />
 
-> 🎬 **Watch Project Video Walkthrough**: **[Complete 3-Minute Video Demonstration on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**  
+> 🎬 **Watch Project Video Walkthrough**: **[Complete Video Demonstration on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**  
 > ⚡ **Deployed Live on AWS ap-south-1 (Mumbai)**: Serverless API gateway with sub-second coupled AC power-flow & IEEE C57.91 thermal engine verified at **[`/v2/health`](https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health)**.
 
 <br />
@@ -471,8 +471,8 @@ Authoritative engineering specifications, mathematical proofs, and deployment ru
 
 | Document | Purpose & Scope |
 | :--- | :--- |
-| 🎬 [**Video Demonstration**](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link) | 3-minute video presentation explaining the problem, IEEE C57.91 physics, and AWS serverless architecture |
-| 🏆 [**Judges & Evaluator Guide**](docs/JUDGES_GUIDE.md) | 3-minute video breakdown, rubric mapping (Waste & Energy track), and live cloud endpoint testing |
+| 🎬 [**Video Demonstration**](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link) | Comprehensive video presentation explaining the problem, IEEE C57.91 physics, and AWS serverless architecture |
+| 🏆 [**Judges & Evaluator Guide**](docs/JUDGES_GUIDE.md) | Video walkthrough breakdown, rubric mapping (Waste & Energy track), and live cloud endpoint testing |
 | 🌱 [**Environmental Impact Assessment**](docs/ENVIRONMENTAL_IMPACT.md) | Quantified asset waste reduction (avoided copper/steel/oil scrap) and renewable hosting expansion |
 | 📖 [**API Contract v3**](docs/api-contract.md) | Single source of truth for all request/response schemas, enums, units, and error codes |
 | 📐 [**Engineering Methodology**](docs/methodology.md) | Mathematical derivations of AC power flow, IEEE C57.91 thermal state updates, and $F_{\text{AA}}$ |

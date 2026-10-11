@@ -5,8 +5,8 @@ Authoritative engineering, mathematical, cloud architectural, and hackathon eval
 ---
 
 ## 1. Hackathon Evaluation & Impact
-- 🎬 [**Project Video Demonstration**](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link): 3-minute video presentation explaining the problem statement, IEEE C57.91 physics, and live AWS serverless architecture.
-- 🏆 [**Judges & Evaluator Guide**](JUDGES_GUIDE.md): 3-minute video breakdown, rubric mapping (Waste & Energy track), and live cloud endpoint testing.
+- 🎬 [**Project Video Demonstration**](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link): Complete video demonstration on Google Drive explaining the problem statement, IEEE C57.91 physics, and live AWS serverless architecture.
+- 🏆 [**Judges & Evaluator Guide**](JUDGES_GUIDE.md): Evaluator narrative breakdown, rubric mapping (Waste & Energy track), and live cloud endpoint testing.
 - 🌱 [**Environmental Impact Assessment**](ENVIRONMENTAL_IMPACT.md): Quantified asset waste reduction (avoided copper/steel/mineral oil scrap) and renewable hosting expansion.
 - ❓ [**Frequently Asked Questions (FAQ)**](FAQ.md): Detailed engineering answers on standard-library Python, avoiding black-box ML, and thermal stability.
 - 🧪 [**End-to-End Verification Runbook**](VERIFICATION_RUNBOOK.md): Step-by-step reproduction guide for local tests, Lambda invokers, frontend quality gates, and live AWS calls.

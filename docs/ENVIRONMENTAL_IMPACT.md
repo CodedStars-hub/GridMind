@@ -16,7 +16,7 @@ Across urban India and developing economies, distribution utilities (**DISCOMs**
 2. **Eliminating Clean Energy Bottlenecks**: Providing time-resolved hosting capacity analytics that allow utilities to safely approve rooftop solar and EV charging interconnections that would otherwise be rejected.
 3. **Optimizing Energy Efficiency**: Reducing severe $I^2 R$ non-linear copper losses that occur when transformers operate in extreme overload conditions.
 
-> 🎬 **Project Video Demonstration**: Watch our 3-minute video presentation explaining the environmental crisis and GridMind's solution: **[Watch on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**
+> 🎬 **Project Video Demonstration**: Watch our video presentation explaining the environmental crisis and GridMind's solution: **[Complete Video Demonstration on Google Drive](https://drive.google.com/file/d/10gruQFk1MFoZIFqSXgte1COrSRzSN2S-/view?usp=drive_link)**
 
 ---
 
