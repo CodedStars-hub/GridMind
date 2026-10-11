@@ -1,0 +1,328 @@
+{
+  "engine_version": "0.1.0",
+  "enums": {
+    "ev_kw": [
+      10,
+      30,
+      50,
+      100
+    ],
+    "pv_kwp": [
+      0,
+      10,
+      20,
+      30
+    ],
+    "day_type": [
+      "summer_weekday",
+      "winter_weekday",
+      "weekend"
+    ],
+    "load_level": [
+      "moderate",
+      "heavy",
+      "critical"
+    ],
+    "bess": [
+      "off",
+      "auto"
+    ]
+  },
+  "defaults": {
+    "ev_kw": 50,
+    "pv_kwp": 30,
+    "day_type": "summer_weekday",
+    "load_level": "heavy",
+    "bess": "off"
+  },
+  "assumptions": [
+    {
+      "name": "rated_kva",
+      "value": 250,
+      "unit": "kVA",
+      "note": "PRD v2.0 section 5 (250 kVA transformer)"
+    },
+    {
+      "name": "hv_voltage_kv",
+      "value": 11,
+      "unit": "kV",
+      "note": "PRD v2.0 section 1 (11 kV/415 V)"
+    },
+    {
+      "name": "lv_voltage_v",
+      "value": 415,
+      "unit": "V",
+      "note": "PRD v2.0 section 1 (11 kV/415 V)"
+    },
+    {
+      "name": "source_voltage_pu",
+      "value": 1.0,
+      "unit": "p.u.",
+      "note": "PRD v2.0 section 7 (HV source at 1.0 p.u., fixed tap)"
+    },
+    {
+      "name": "impedance_voltage_pct",
+      "value": 4.5,
+      "unit": "percent",
+      "note": "assumption: typical short-circuit impedance of a 250 kVA distribution transformer; verify against nameplate"
+    },
+    {
+      "name": "no_load_loss_w",
+      "value": 600,
+      "unit": "W",
+      "note": "assumption: typical no-load loss; chosen so load_loss_w / no_load_loss_w equals loss_ratio = 5.0 used by the thermal model; verify against nameplate"
+    },
+    {
+      "name": "load_loss_w",
+      "value": 3000,
+      "unit": "W",
+      "note": "assumption: typical load loss at rated current for a 250 kVA unit; verify against nameplate"
+    },
+    {
+      "name": "rated_top_oil_rise_c",
+      "value": 55,
+      "unit": "degC",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "rated_hotspot_rise_over_top_oil_c",
+      "value": 25,
+      "unit": "degC",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "loss_ratio",
+      "value": 5.0,
+      "unit": "ratio",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "oil_exponent",
+      "value": 0.8,
+      "unit": "none",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "winding_exponent",
+      "value": 0.8,
+      "unit": "none",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "oil_time_constant_min",
+      "value": 180,
+      "unit": "min",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "winding_time_constant_min",
+      "value": 5,
+      "unit": "min",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "feeder_resistance_pu",
+      "value": 0.024,
+      "unit": "p.u. on a 250 kVA, 415 V base",
+      "note": "assumption: roughly 100 m of 185 mm2 aluminium four-core LV cable, typical per-km values; replace with real feeder data"
+    },
+    {
+      "name": "feeder_reactance_pu",
+      "value": 0.01,
+      "unit": "p.u. on a 250 kVA, 415 V base",
+      "note": "assumption: roughly 100 m of 185 mm2 aluminium four-core LV cable, typical per-km values; replace with real feeder data"
+    },
+    {
+      "name": "power_factor_base",
+      "value": 0.95,
+      "unit": "none",
+      "note": "PRD v2.0 section 7 (base load 0.95 lagging); Fixed design choice, not a measured value."
+    },
+    {
+      "name": "power_factor_ev",
+      "value": 0.98,
+      "unit": "none",
+      "note": "PRD v2.0 section 7 (EV 0.98); Fixed design choice, not a measured value."
+    },
+    {
+      "name": "power_factor_pv",
+      "value": 1.0,
+      "unit": "none",
+      "note": "PRD v2.0 section 7 (PV unity); Fixed design choice, not a measured value."
+    },
+    {
+      "name": "reference_ambient_c",
+      "value": 30,
+      "unit": "degC",
+      "note": "assumption: typical value for a 65 C-rise ONAN distribution transformer (80 C hot-spot rise plus 30 C ambient = 110 C reference); not from a specific nameplate; verify against nameplate or standard before real-world use"
+    },
+    {
+      "name": "powerflow_tolerance_pu",
+      "value": 1e-09,
+      "unit": "p.u.",
+      "note": "assumption: numerical solver setting for the complex voltage convergence tolerance"
+    },
+    {
+      "name": "powerflow_max_iterations",
+      "value": 50,
+      "unit": "count",
+      "note": "assumption: numerical solver setting limiting fixed-point iterations"
+    },
+    {
+      "name": "voltage_min_pu",
+      "value": 0.95,
+      "unit": "p.u.",
+      "note": "PRD v2.0 section 7; Configurable; to be confirmed against the applicable SERC supply code."
+    },
+    {
+      "name": "voltage_max_pu",
+      "value": 1.05,
+      "unit": "p.u.",
+      "note": "PRD v2.0 section 7; Configurable; to be confirmed against the applicable SERC supply code."
+    },
+    {
+      "name": "hotspot_warning_c",
+      "value": 110,
+      "unit": "degC",
+      "note": "PRD v2.0 section 7"
+    },
+    {
+      "name": "hotspot_critical_c",
+      "value": 140,
+      "unit": "degC",
+      "note": "PRD v2.0 section 7"
+    },
+    {
+      "name": "loading_info_pct",
+      "value": 100,
+      "unit": "%",
+      "note": "PRD v2.0 section 7"
+    },
+    {
+      "name": "aging_reference_hotspot_c",
+      "value": 110,
+      "unit": "degC",
+      "note": "IEEE C57.91 as quoted in PRD v2.0 section 7"
+    },
+    {
+      "name": "aging_constant",
+      "value": 15000,
+      "unit": "K",
+      "note": "IEEE C57.91 as quoted in PRD v2.0 section 7"
+    },
+    {
+      "name": "aging_reference_kelvin",
+      "value": 383,
+      "unit": "K",
+      "note": "IEEE C57.91 as quoted in PRD v2.0 section 7"
+    },
+    {
+      "name": "normal_insulation_life_hours",
+      "value": 180000,
+      "unit": "h",
+      "note": "PRD v2.0 section 7 (normal life at reference)"
+    },
+    {
+      "name": "insulation_life_cap_years",
+      "value": 100,
+      "unit": "years",
+      "note": "display cap so very low aging does not produce unbounded life; editable"
+    },
+    {
+      "name": "calendar_days_per_year",
+      "value": 365,
+      "unit": "days/year",
+      "note": "Fixed 365-day calendar conversion for reference-equivalent aging years; leap years ignored; not an actual service-life prediction."
+    },
+    {
+      "name": "transformer_upgrade_cost_inr",
+      "value": 550000,
+      "unit": "INR",
+      "note": "5.5 lakh. PRD v1.0 default within an assumed 5-7 lakh range (PRD v2.0 section 1). Editable."
+    },
+    {
+      "name": "bess_cost_per_kwh_inr",
+      "value": 15000,
+      "unit": "INR/kWh",
+      "note": "PRD v1.0 default. Editable."
+    },
+    {
+      "name": "bess_cost_per_kw_inr",
+      "value": null,
+      "unit": "INR/kW",
+      "note": "TBD"
+    },
+    {
+      "name": "round_trip_efficiency",
+      "value": 0.9,
+      "unit": "ratio",
+      "note": "PRD v2.0 section 8.2"
+    },
+    {
+      "name": "soc_min_pct",
+      "value": 10,
+      "unit": "%",
+      "note": "PRD v2.0 section 8.2"
+    },
+    {
+      "name": "soc_max_pct",
+      "value": 90,
+      "unit": "%",
+      "note": "PRD v2.0 section 8.2"
+    },
+    {
+      "name": "loading_discharge_threshold_pct",
+      "value": 90,
+      "unit": "%",
+      "note": "PRD v2.0 section 8.2"
+    },
+    {
+      "name": "voltage_discharge_threshold_pu",
+      "value": 0.95,
+      "unit": "p.u.",
+      "note": "PRD v2.0 section 8.2"
+    },
+    {
+      "name": "sweep_power_kw_grid",
+      "value": null,
+      "unit": "kW",
+      "note": "TBD"
+    },
+    {
+      "name": "sweep_energy_kwh_grid",
+      "value": null,
+      "unit": "kWh",
+      "note": "TBD"
+    },
+    {
+      "name": "charge_window_start",
+      "value": null,
+      "unit": "HH:MM",
+      "note": "TBD"
+    },
+    {
+      "name": "charge_window_end",
+      "value": null,
+      "unit": "HH:MM",
+      "note": "TBD"
+    },
+    {
+      "name": "moderate_base_peak_pct_of_rating",
+      "value": 55,
+      "unit": "percent of rated_kva, applied to real power in kW",
+      "note": "assumption: demo calibration of existing transformer loading before the new EV hub; replace with real feeder data"
+    },
+    {
+      "name": "heavy_base_peak_pct_of_rating",
+      "value": 70,
+      "unit": "percent of rated_kva, applied to real power in kW",
+      "note": "assumption: demo calibration of existing transformer loading before the new EV hub; replace with real feeder data"
+    },
+    {
+      "name": "critical_base_peak_pct_of_rating",
+      "value": 85,
+      "unit": "percent of rated_kva, applied to real power in kW",
+      "note": "assumption: demo calibration of existing transformer loading before the new EV hub; replace with real feeder data"
+    }
+  ]
+}

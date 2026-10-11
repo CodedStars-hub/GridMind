@@ -14,7 +14,7 @@ Planning-grade model of one transformer. Values marked TBD are not final.
 
 **scripts/** will hold deploy, precompute and smoke-test scripts. It is empty for now.
 
-**web/** will hold the Vite + React + TypeScript frontend. It is empty for now.
+**frontend/** holds the M12 React + strict TypeScript + Vite + Tailwind application, including API integration, navigation, tests and setup documentation. **web/** is the original placeholder; the application lives in `frontend/` as specified for M12.
 
 **infra/** will hold the AWS SAM template. It is empty for now.
 
@@ -31,7 +31,7 @@ pytest engine/tests
 
 No installation of the engine is needed: `pytest.ini` puts `engine/` on the Python path.
 
-Current status: M0 to M5 complete
+Current status: M12 frontend foundation complete; advanced interactive views remain upcoming.
 
 Engine code must stay compatible with Python 3.12. Do not use syntax or standard-library features newer than 3.12.
 
@@ -51,9 +51,9 @@ python scripts/invoke_local.py lambda/events/simulate_default.json --summary
 ```
 Use `get_scenarios.json --pretty` to inspect the choices and assumptions. This handler is local only.
 
-## API v2 (local preparation)
+## API v2
 
-The existing handler exposes `/v2/health`, `/v2/scenarios`, `/v2/network`, `/v2/simulate`, `/v2/assess`, `/v2/impact`, `/v2/hosting` and `/v2/plan`; see [the API contract](docs/api-contract.md#13-m11-versioned-http-api-integration). No live API URL is verified.
+The existing handler exposes `/v2/health`, `/v2/scenarios`, `/v2/network`, `/v2/simulate`, `/v2/assess`, `/v2/impact`, `/v2/hosting` and `/v2/plan`; see [the API contract](docs/api-contract.md#13-m11-versioned-http-api-integration). The deployed Mumbai API base supplied for M12 is `https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com`; health and neighbourhood configuration were verified during frontend integration.
 
 ```bash
 .venv/bin/python scripts/invoke_local.py lambda/events/v2_health.json --pretty
@@ -62,3 +62,14 @@ The existing handler exposes `/v2/health`, `/v2/scenarios`, `/v2/network`, `/v2/
 ```
 
 Deployment requires separate approval; see [the infrastructure review](infra/README.md). Model results are illustrative, hosting excludes shared upstream constraints, and placement is a deterministic heuristic rather than a guaranteed optimum. No real-time telemetry is implemented.
+
+## Run the frontend locally
+
+```bash
+cd frontend
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Open `http://localhost:5173`. The development proxy connects same-origin browser requests to the deployed API without changing AWS CORS. Direct browser access needs a separately approved origin allowlist update; see [frontend setup and architecture](frontend/README.md) for environment variables, CORS, tests and production builds.
