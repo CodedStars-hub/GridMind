@@ -81,7 +81,6 @@
         "must": ["Keep proxy payload 2.0", "Do not add conflicting gateway CORS", "Keep the public API scoped to this function"]
       }},
       "Properties": {
-        "Name": {"Fn::Sub": "${AWS::StackName}-http"},
         "StageName": "$default",
         "DefaultRouteSettings": {"ThrottlingRateLimit": 1, "ThrottlingBurstLimit": 2},
         "DefinitionBody": {
