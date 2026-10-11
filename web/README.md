@@ -1,3 +1,5 @@
-# web/
+# Web Application Workspace (Superseded by `frontend/`)
 
-Will hold the browser frontend, built with Vite, React and TypeScript. It will show the input panel and the voltage, hot-spot and loading charts. The first version arrives in milestone M6.
+> **Notice**: The active, production-ready React 19 + TypeScript + Vite + Tailwind CSS v4 frontend application resides in the [`frontend/`](../frontend/) directory.
+
+Please consult [`frontend/README.md`](../frontend/README.md) for complete local development instructions, Vite proxy configuration, component test suites, and production build runbooks.

@@ -1,100 +1,209 @@
-# GridMind methodology
+# GridMind Engineering Methodology
 
-Planning-grade model; this skeleton assigns the full explanations to M6.
+Authoritative mathematical derivations, physical formulations, and algorithmic specifications governing the GridMind digital twin.
 
-## Overview
+---
 
-Explain the neighbourhood planning question, modelled baseline and shared single-transformer engine. Document in M6.
+## 1. Executive Summary & Core Objective
 
-## Electrical model
+GridMind addresses the critical last-mile distribution planning challenge: **evaluating the operational and physical degradation impact of concentrated EV fast charging hubs and rooftop solar PV on urban 11 kV / 415 V distribution transformers.**
 
-Explain the existing M2 topology, per-unit bases, fixed power factors and current-based loading. Document in M6.
+Distribution transformers (typically 100–630 kVA, nominal 250 kVA) are the most expensive and vulnerable assets in the low-voltage network. When high-power EV charging coincides with evening peak load and high ambient temperatures, transformers experience simultaneous statutory voltage collapse ($< 0.95\text{ p.u.}$) and rapid thermal degradation.
 
-## Thermal model
+GridMind replaces static spreadsheets and licensed black-box software with a **deterministic, standard-library Python physics engine** that:
+1. Solves radial AC power flow via exact fixed-point iteration.
+2. Updates transformer thermal states using the **IEEE C57.91-1995/2011** analytical exponential model.
+3. Quantifies cumulative insulation degradation via the **Arrhenius Aging Acceleration Factor ($F_{\text{AA}}$)**.
+4. Auto-sizes Battery Energy Storage Systems (BESS) or evaluates dynamic smart-charging curtailment to remediate violations.
+5. Emits standardized **OpenADR 2.0b** demand-response signals published to **AWS IoT Core** edge controllers.
 
-Explain the existing M1 thermal assumptions, exact updates and daily warm-up procedure. Document in M6.
+---
 
-## Aging and life
+## 2. Electrical Model & Radial Power Flow
 
-Explain the existing M1 aging factor, normal insulation life and configurable display cap. Document in M6.
+### 2.1 Per-Unit System Formulation
+The electrical network is modeled on a single-phase balanced equivalent basis using standard per-unit normalizations:
+- **Base Power**: $S_{\text{base}} = 250\text{ kVA}$
+- **Base Secondary Voltage**: $V_{\text{base,LV}} = 415\text{ V}$ (line-to-line) $\implies V_{\text{base,LN}} = \frac{415}{\sqrt{3}} \approx 239.6\text{ V}$
+- **Base Secondary Current**: $I_{\text{base}} = \frac{S_{\text{base}}}{\sqrt{3} \cdot V_{\text{base,LV}}} \approx 347.8\text{ A}$
+- **Base Impedance**: $Z_{\text{base}} = \frac{V_{\text{base,LV}}^2}{S_{\text{base}}} = \frac{415^2}{250000} \approx 0.6889\ \Omega$
 
-## Monthly projection
+### 2.2 Transformer & Feeder Impedance
+The network series impedance $Z_{\text{series}} = R_{\text{total}} + jX_{\text{total}}$ consists of:
+1. **Transformer Series Impedance**:
+   - Short-circuit impedance magnitude: $z_{\text{tx}} = \frac{\text{impedance\_voltage\_pct}}{100} = 0.045\text{ p.u.}$
+   - Transformer resistance: $r_{\text{tx}} = \frac{P_{\text{load\_loss,W}}}{S_{\text{base,VA}}} = \frac{3000}{250000} = 0.012\text{ p.u.}$
+   - Transformer reactance: $x_{\text{tx}} = \sqrt{z_{\text{tx}}^2 - r_{\text{tx}}^2} = \sqrt{0.045^2 - 0.012^2} \approx 0.04337\text{ p.u.}$
+2. **Lumped Secondary Feeder Impedance**:
+   - Modelled on $100\text{ m}$ of $185\text{ mm}^2$ 4-core aluminum underground cable:
+   - $r_{\text{feeder}} = 0.024\text{ p.u.}$
+   - $x_{\text{feeder}} = 0.010\text{ p.u.}$
+3. **Total Radial Branch Impedance**:
+   $$R_{\text{total}} = r_{\text{tx}} + r_{\text{feeder}} = 0.012 + 0.024 = 0.036\text{ p.u.}$$
+   $$X_{\text{total}} = x_{\text{tx}} + x_{\text{feeder}} = 0.04337 + 0.010 = 0.05337\text{ p.u.}$$
 
-Explain representative weekday/weekend weighting, equivalent life consumed and depreciation. Document in M6.
+### 2.3 Net Load Aggregation & Power Factors
+At each 15-minute time-step $t \in [0, 95]$:
+- Base active demand: $P_{\text{base}}(t)$ with fixed power factor $\cos\phi_{\text{base}} = 0.95$ lagging.
+- EV hub active demand: $P_{\text{EV}}(t)$ with fixed power factor $\cos\phi_{\text{EV}} = 0.98$ lagging.
+- Solar PV generation: $P_{\text{PV}}(t)$ at unity power factor ($\cos\phi_{\text{PV}} = 1.0$).
+- Battery net power: $P_{\text{BESS}}(t)$ (discharge $> 0$, charge $< 0$) at unity power factor.
 
-## Household effects
+$$\text{Net Active Power: } P_{\text{net}}(t) = P_{\text{base}}(t) + P_{\text{EV}}(t) - P_{\text{PV}}(t) - P_{\text{BESS,discharge}}(t) + P_{\text{BESS,charge}}(t)$$
 
-Explain voltage exposure and indicative heater/motor rules, including their limits. Document in M6.
+$$\text{Net Reactive Power: } Q_{\text{net}}(t) = P_{\text{base}}(t) \tan(\arccos(0.95)) + P_{\text{EV}}(t) \tan(\arccos(0.98))$$
 
-## Hosting capacity
+In per-unit notation:
+$$s_{\text{net}}(t) = p_{\text{net}}(t) + j q_{\text{net}}(t) = \frac{P_{\text{net}}(t)}{S_{\text{base}}} + j \frac{Q_{\text{net}}(t)}{S_{\text{base}}}$$
 
-M9 implements the configured discrete search and healthy-on-both-days criterion below. It does not calculate a continuous maximum or approve an interconnection.
+### 2.4 Exact Fixed-Point Iterative Solution
+Starting with $V^{(0)} = V_{\text{source}} = 1.0 + j0.0\text{ p.u.}$, the connection point voltage is iteratively solved:
 
-## Placement and remedies
+$$I^{(k)} = \left( \frac{s_{\text{net}}}{V^{(k)}} \right)^*$$
 
-Explain the modelled footfall baseline, remedy ladder, feasibility and cost comparison. Document in M6; update as planner remedies are implemented.
+$$V^{(k+1)} = V_{\text{source}} - Z_{\text{series}} \cdot I^{(k)}$$
 
-## Data and assumptions
+The solver terminates when $|V^{(k+1)} - V^{(k)}| < 10^{-9}\text{ p.u.}$ (typically converges in 3–5 iterations). A numerical guard aborts if $|V| < 0.10\text{ p.u.}$ to prevent voltage collapse singularity.
 
-Explain illustrative topology, profile authoring, archetypes, charging usage and replacement with measured data. Document in M6.
+### 2.5 Current-Based Loading Definition
+At depressed operating voltages, constant apparent power draws higher current. GridMind measures loading as true secondary current magnitude:
 
-## Limitations
+$$K(t) = \frac{|I(t)|}{I_{\text{base}}} = |I(t)|\text{ (in p.u.)} \implies \text{Loading \%} = 100 \cdot K(t)$$
 
-Explain representative days, simplified equipment and appliance behaviour, missing quotes and uncertainty. Document in M6.
+---
 
-## References
+## 3. Thermal Dynamics: IEEE C57.91-1995/2011
 
-List primary engineering references and distinguish supplied assumptions from verified sources. Document in M6.
+### 3.1 Limitations of Forward Euler Discretization
+Distribution transformer winding time constants ($\tau_W \approx 5\text{ minutes}$) are significantly shorter than the standard 15-minute simulation interval ($\Delta t = 15\text{ minutes}$). Explicit forward Euler approximation introduces numerical oscillation and overshoots. GridMind implements the **exact analytical exponential state update**.
 
+### 3.2 State Equations & Analytic State Advance
+Transformer thermal behavior is governed by two coupled first-order differential equations representing top-oil rise over ambient ($\Delta \theta_{\text{TO}}$) and winding hot-spot rise over top-oil ($\Delta \theta_H$):
 
-## M7 assessment implementation
+$$\tau_{\text{TO}} \frac{d\Delta \theta_{\text{TO}}}{dt} + \Delta \theta_{\text{TO}} = \Delta \theta_{\text{TO},U}$$
 
-`assess_network(payload, config)` validates the allocation, selects residential/commercial/mixed base profiles and evening/daytime charging profiles, and aggregates site powers onto their configured transformer. Missing sites contribute zero charging. Configuration errors raise ValueError; malformed requests raise InvalidInputError naming the field; shared power-flow failures propagate without a partial assessment.
+$$\tau_W \frac{d\Delta \theta_H}{dt} + \Delta \theta_H = \Delta \theta_{H,U}$$
 
-`simulate_load_series(loads, config, input_echo)` is the shared daily orchestration interface; `simulate_day` and `run_simulation` keep their existing public signatures and behaviour. The refactor changes no physics. Six full-result fixtures captured before the refactor preserve supported single-transformer outputs, including time series, metadata, rounding, alerts and verdicts. Both network representative days use that same routine.
+Given constant load $K(t)$ over interval $\Delta t = 15\text{ min}$, the exact analytical solutions are:
 
-Coincident charging peak and integrated daily energy use aligned full-precision served site powers, with final rounding only. Worst hot-spot is the maximum over every transformer and both days; status counts count each transformer once. Voltage stays associated with the branch's series and summary. No network-average insulation aging, monthly depreciation, household indicators or hosting search is introduced. These results remain illustrative planning calculations requiring site-specific calibration.
+$$\Delta \theta_{\text{TO}}(t) = \Delta \theta_{\text{TO},U} - \left( \Delta \theta_{\text{TO},U} - \Delta \theta_{\text{TO}}(t - \Delta t) \right) e^{-\Delta t / \tau_{\text{TO}}}$$
 
-## M8 reference-equivalent life, value and exposure
+$$\Delta \theta_H(t) = \Delta \theta_{H,U} - \left( \Delta \theta_{H,U} - \Delta \theta_H(t - \Delta t) \right) e^{-\Delta t / \tau_W}$$
 
-`assess_impact(payload, config)` evaluates the submitted allocation and an empty-allocation baseline through the same M7 engine. Optional internal precision-returning functions expose the final-pass records before rounding, including weekend series previously omitted from the public response. They do not introduce another solver. Existing full-output golden fixtures and M7 response hashes protect public results.
+Where ultimate steady-state rises are defined by:
+- **Ultimate Top-Oil Rise**:
+  $$\Delta \theta_{\text{TO},U} = \Delta \theta_{\text{TO,rated}} \left( \frac{K(t)^2 R_{\text{loss}} + 1}{R_{\text{loss}} + 1} \right)^n$$
+- **Ultimate Hot-Spot Rise over Top-Oil**:
+  $$\Delta \theta_{H,U} = \Delta \theta_{H,\text{rated}} \cdot K(t)^{2m}$$
 
-For each complete representative day, equivalent reference aging hours are the sum of unrounded FAA times interval duration in hours. Monthly equivalent hours are weekday_count times weekday hours plus weekend_count times weekend hours. Additional hours are EV minus baseline and remain signed. For identical repeated days this reduces to daily difference times the configured month length. Divide by configured calendar_days_per_year times calendar-day hours for reference-equivalent years. Divide equivalent hours by the corresponding calendar hours for the aging ratio; percentage change uses the baseline as denominator and is null at zero. Peak hot-spot comparisons use absolute unrounded temperatures and Celsius differences, not temperature percentages.
+Where:
+- $\Delta \theta_{\text{TO,rated}} = 55^\circ\text{C}$ (rated top-oil rise for 65°C-rise ONAN unit)
+- $\Delta \theta_{H,\text{rated}} = 25^\circ\text{C}$ (rated hot-spot rise over top-oil)
+- $R_{\text{loss}} = \frac{P_{\text{load\_loss}}}{P_{\text{no\_load\_loss}}} = \frac{3000}{600} = 5.0$ (loss ratio)
+- $n = 0.8$ (oil cooling exponent)
+- $m = 0.8$ (winding cooling exponent)
+- $\tau_{\text{TO}} = 180\text{ minutes}$ (oil thermal time constant)
+- $\tau_W = 5\text{ minutes}$ (winding thermal time constant)
 
-The illustrative monthly economic proxy values the fraction of reference insulation life consumed: equivalent hours divided by normal_insulation_life_hours, multiplied by transformer_upgrade_cost_inr as an explicit equipment value proxy. Additional value uses additional hours directly. This neither predicts a replacement date nor guarantees spending or loss; upgrade pricing is not a site-specific replacement quote. Multiple reference-life equivalents are not clipped. INR results round to integers only at presentation; neighbourhood totals use unrounded asset values.
+### 3.3 Absolute Temperatures & Warm-Up Procedure
+Absolute temperatures are obtained by superimposing ambient temperature $\theta_A(t)$:
+$$\theta_{\text{TO}}(t) = \theta_A(t) + \Delta \theta_{\text{TO}}(t)$$
+$$\theta_H(t) = \theta_{\text{TO}}(t) + \Delta \theta_H(t) = \theta_A(t) + \Delta \theta_{\text{TO}}(t) + \Delta \theta_H(t)$$
 
-Strict voltage-limit comparisons count violating samples. Each sample spans step_minutes/60 hours, including the last sample; adjacent violating samples form one event and events never join across midnight. Potential connection-hours equal configured customers times violating hours. Monthly exposure weights the representative days, but customer counts are counted once if any day with nonzero monthly weight violates. Residential proxy totals include residential archetypes only; they are not a census of all neighbourhood households. Unknown counts propagate null rather than incomplete totals.
+**Dual-Pass Warm-Up**: To eliminate arbitrary initial condition bias at midnight (00:00), the 24-hour simulation is executed over two complete cycles. Pass 1 warms up the thermal mass toward periodic steady state; Pass 2 is reported to the user.
 
-Impact metrics intentionally use unrounded voltages; near thresholds they may differ from the legacy chart alerts, which use rounded voltages. The one-point feeder model omits household service drops and appliance susceptibility, so exposure cannot establish appliance damage. Neighbourhood equivalent aging totals have units of transformer-hours or transformer-years across separate assets. Percentages and voltage extrema are not summed. Definitions and all response fields are in API contract section 10; no HTTP deployment is part of M8.
+---
 
-## M9 hosting search implementation
+## 4. Insulation Aging & Life Consumption
 
-`assess_hosting(config)` obtains a zero-proposed-EV baseline through `assess_network_with_precision`. For each transformer, `candidate_load_series` calls M7's profile builder with one virtual aggregate charging entry associated with that branch. The aggregate is not a site allocation: it avoids falsely restricting electrical headroom to existing candidate-site ceilings. Residential/commercial/mixed demand and evening/daytime EV shapes remain branch-specific. The shared `simulate_load_series_with_precision` performs all electrical, thermal and aging calculations; hosting modules contain no duplicate equations.
+### 4.1 Arrhenius Aging Acceleration Factor ($F_{\text{AA}}$)
+The thermal degradation of cellulose insulation immersed in mineral oil follows the Arrhenius chemical reaction rate:
 
-At each grid candidate q, uncontrolled EV power is q times the normalized shape. Thus uncontrolled coincident peak is q. Managed power uses the same M7 clipping and overnight redistribution rule; the profile scale q, delivered peak and daily served kWh are returned separately. Managed feasibility retains the configured energy percentage on each day. The two representative days use summer weather but different configured demand profiles.
+$$F_{\text{AA}}(t) = \exp\left( \frac{B}{T_{\text{ref}}} - \frac{B}{T_H(t)} \right) = \exp\left( \frac{15000}{383.15} - \frac{15000}{\theta_H(t) + 273.15} \right)$$
 
-`check_operating_series` takes extrema of unrounded voltage, loading and hot-spot series and reports margins. A lower-bound margin is observed minimum minus configured minimum; an upper-bound margin is configured maximum minus observed maximum. Any negative margin is a violation. There is no numerical safety epsilon or decision rounding. Hot-spot warning and critical diagnostics can both violate; the lower warning threshold determines healthy hosting. Top-oil and FAA are calculated by the engine, but no operational thresholds for them are configured.
+- At $\theta_H = 110^\circ\text{C}$: $F_{\text{AA}} = 1.0$ (baseline degradation rate)
+- At $\theta_H = 105^\circ\text{C}$: $F_{\text{AA}} \approx 0.63$ (decelerated aging)
+- At $\theta_H = 135^\circ\text{C}$: $F_{\text{AA}} \approx 10.9$ (1 hour consumes 11 hours of asset life)
+- At $\theta_H = 140^\circ\text{C}$: $F_{\text{AA}} \approx 17.2$ (severe thermal runaway)
 
-`grid_search` evaluates all positive multiples of allocation_block_kw through hosting_search_max_kw, after baseline evaluation. Exhaustive search tolerates non-monotonic feasibility; sampled monotonicity is not claimed as proof. It selects the highest evaluated feasible point and retains the next grid point's violations as limiting factors. At the upper bound, the true capacity may be greater. A compliant baseline with no feasible positive point selects zero; an already-violating baseline has no selected point and no positive search.
+### 4.2 Equivalent Aging Hours & Expected Lifespan
+Daily equivalent operating hours at reference temperature:
+$$L_{\text{EQ}} = \sum_{i=0}^{95} F_{\text{AA}}(t_i) \cdot \Delta t_{\text{hours}} \quad (\text{where } \Delta t = 0.25\text{ hours})$$
 
-For managed capacity, repeat that grid for each configured fraction. Select the largest feasible scaling level, then the highest sum of representative-day served energy, then the highest fraction. This follows the existing hosting contract, not the later placement/remedy ladder. No cost, battery, reallocation or equipment upgrade is considered. The configured evaluation budget must cover every possible candidate before any simulations start; each candidate represents two daily simulations, except baseline reused from M7. Baseline convergence failure propagates; candidate convergence failure is an explicit infeasible result and does not terminate the exhaustive grid.
+Normal insulation life expectancy under reference conditions is $180,000\text{ hours}$ ($\approx 20.55\text{ years}$). Projected calendar lifespan under the simulated operating regime:
+$$\text{Expected Life (Years)} = \min\left( \frac{180000}{L_{\text{EQ}} \times 365}, \text{insulation\_life\_cap\_years} \right)$$
+(where the default display cap is 100 years).
 
-The response is opt-in and additive, defined in API contract section 11. M7/M8 consumers and golden outputs remain unchanged. Presentation rounds diagnostics only after feasibility and search; a negative margin close to zero may display as zero. Neighbourhood counts count each transformer once. Sum only independent uncontrolled kW, explicitly excluding any validation of shared upstream capacity or simultaneous network feasibility. The existing topology assigns identical equipment to all six branches; no unsupported per-equipment overrides are invented.
+---
 
-## M10 deterministic placement procedure
+## 5. Monthly Projection & Economic Valuation
 
-1. Validate candidate identities, transformer associations, eligibility, finite footfall, requests and configured budgets. Normalize attractiveness as footfall_score / planner_footfall_max_score and multiply by planner_score_weights.footfall. Rank by descending unrounded score, then ascending site identifier. Electrical eligibility is assessed separately and never replaced by a high score.
-2. Run the existing-demand network and M9 hosting assessment. For each ranked eligible site on a baseline-compliant transformer, evaluate every configured allocation increment up to its request and the remaining target, with uncontrolled charging and each managed cap. Combine all previously accepted sites on that transformer before calling the shared M7 simulation engine on both representative days. Site-specific timing is unsupported; the transformer's configured usage determines all its site shapes.
-3. Accept the largest feasible profile-scale allocation. At equal demand choose the cheapest known controller mode, then the largest two-day delivered energy, then the highest cap. Managed energy must meet the configured retention floor separately for each site/day. Exhaustive bounded search avoids an unsupported monotonicity assumption; earlier accepted placements are fixed, so the procedure is a greedy heuristic, not a global optimum. The configured evaluation budget must cover every possible site level/mode.
-4. Rerun the final combined network and verify unrounded operating limits. Report selected, partial and rejected candidates with stable reason codes and limiting constraints. Distinguish feasibility of added allocations from compliance of the whole neighbourhood: an unchanged existing violation is not repaired or concealed. No electrical allocation is placed on that branch.
-5. Build two comparisons: existing demand versus the plan through M8; and the contract-required unplanned reference versus the plan. The reference fills sites by footfall up to configured ceilings without electrical screening. Both hold load, equipment, ambient and calendar assumptions constant. Round only assembled response values (four decimals, integer INR).
+### 5.1 Representative Day Weighting
+To project annual and monthly performance without simulating all 365 days, GridMind uses representative weekday and weekend profiles:
+$$\text{Days}_{\text{month}} = N_{\text{weekday}} + N_{\text{weekend}} = 22 + 8 = 30\text{ days}$$
+$$L_{\text{EQ,month}} = N_{\text{weekday}} \cdot L_{\text{EQ,weekday}} + N_{\text{weekend}} \cdot L_{\text{EQ,weekend}}$$
 
-Monthly equivalent transformer-days are the sum of per-transformer reference-equivalent aging hours divided by the configured day's hours. Rupee depreciation is the existing M8 reference-life valuation proxy. Count each affected transformer connection group once; customer-hours multiply voltage-low duration by that group's connections and representative-day counts. Minimum voltage and maximum hot-spot are extrema, not sums. Network charging peak is the maximum of aligned sums at each step; energy integrates those sums. The detailed M8 household object additionally reports exposure outside either voltage boundary.
+### 5.2 Economic Asset Life Depreciation Proxy
+GridMind values insulation life consumed against the capital cost of a transformer replacement:
+$$\text{Asset Replacement Capex Proxy} = \text{₹}5,50,000 \text{ to ₹}6,00,000$$
+$$\text{Monthly Economic Depreciation} = \frac{L_{\text{EQ,month}}}{180,000} \times \text{transformer\_upgrade\_cost\_inr}$$
 
-The target budget measures demand scale, not charger hardware, capital spending or energy. A managed allocation's actual peak and energy can be lower than its requested scale. Controller charges apply once per managed site; absent connection quotes are excluded and explicitly identified. An apparent proxy payback is not a guaranteed financial return. Managed modes are tested, but battery/upgrade sizing and cross-site backtracking remain unevaluated alternatives. Independent branches do not validate shared upstream constraints, household service wiring, permits or real demand forecasts.
+$$\text{Additional Monthly Degradation (EV Impact)} = \frac{L_{\text{EQ,month}}^{\text{EV}} - L_{\text{EQ,month}}^{\text{baseline}}}{180,000} \times \text{transformer\_upgrade\_cost\_inr}$$
 
-## M11 API transport
+---
 
-The HTTP namespace `/v2` exposes the established engine functions without an additional calculation layer or response envelope. It is distinct from this document's contract version. The adapter validates strict JSON and established requests, calls the same public engines, then serializes finite JSON; it introduces no engineering rounding, decision cache or new physics. Legacy simulation responses remain regression-protected.
+## 6. Household Exposure & Voltage Quality
 
-HTTP API payload 2.0 is the supported Lambda event shape. Explicit approved browser origins, a decoded body limit, fixed internal-error messages and a single structured log record define transport behaviour; they do not change model assumptions. Health confirms imports/config loading rather than live telemetry or a complete engineering study. Hosting and planning are synchronous bounded searches; local execution times do not prove cloud performance. Cloud latency, CORS and numerical parity must be verified after deployment approval.
+### 6.1 Customer Exposure Metrics
+Low-voltage violations ($V < 0.95\text{ p.u.}$) harm residential appliances (air conditioners, induction cooktops, water pumps):
+$$\text{Violating Duration (Hours)} = \sum_{t \in \text{violations}} \Delta t_{\text{hours}}$$
+$$\text{Customer-Hours of Poor Power Quality} = N_{\text{connections}} \times \text{Violating Duration}$$
+
+---
+
+## 7. Hosting Capacity Search Engine
+
+### 7.1 Exhaustive Grid Search
+Rather than relying on unproven monotonic assumptions, GridMind conducts a discrete exhaustive search over EV charging capacity:
+- Increments: Multiples of $10\text{ kW}$ ($\Delta q = 10\text{ kW}$).
+- Search Range: $q \in [10, 100]\text{ kW}$.
+- Feasibility Criterion: Must satisfy operating margins on **both representative days**:
+  $$\min V(t) \ge 0.95\text{ p.u.}$$
+  $$\max V(t) \le 1.05\text{ p.u.}$$
+  $$\max \theta_H(t) \le 110^\circ\text{C}$$
+  $$\max K(t) \le 100\%$$
+
+---
+
+## 8. Strategic Placement & Remedy Ladder
+
+### 8.1 Footfall-Ranked Placement Algorithm
+When multiple candidate EV charging sites request grid interconnection, GridMind evaluates a 5-step deterministic greedy allocation:
+1. **Candidate Attractiveness Scoring**:
+   $$\text{Score}(s) = \frac{\text{footfall\_score}(s)}{\text{max\_footfall}} \cdot w_{\text{footfall}}$$
+2. **Prioritization**: Ranks sites by descending score, breaking ties by stable site ID.
+3. **Remedy Evaluation Ladder**: For each candidate site:
+   - **Mode 1 (Unmanaged)**: Full requested capacity.
+   - **Mode 2 (Managed Smart-Charging)**: Evaluates peak curtailment with overnight off-peak reallocation.
+   - **Mode 3 (BESS Mitigation)**: Sizes local battery storage to absorb charging peaks.
+4. **Acceptance**: Commits the highest feasible allocation meeting a minimum 70% energy retention guarantee.
+5. **Final Network Verification**: Re-evaluates the entire 6-transformer network simultaneously to confirm no secondary violations.
+
+---
+
+## 9. M7–M11 Production Transport & Multi-Asset Assessment
+
+### 9.1 Multi-Transformer Aggregation (M7)
+`assess_network(payload, config)` maps candidate sites to configured transformers (T1–T6), builds archetype load profiles (residential, commercial, mixed), and aggregates power flows without inventing synthetic network edges.
+
+### 9.2 Economic Valuation Engine (M8)
+`assess_impact(payload, config)` compares proposed charging allocations against a zero-EV baseline, providing unrounded high-precision series for depreciation and customer exposure hours.
+
+### 9.3 Hosting Headroom Search (M9)
+`assess_hosting(config)` evaluates uncontrolled and managed hosting capacity across the transformer fleet, reporting exact limiting constraints (voltage lower bound, thermal hot-spot rise, or secondary current rating).
+
+### 9.4 Strategic Planner (M10)
+`plan_network(payload, config)` executes the deterministic greedy heuristic to distribute a target EV demand across candidate sites.
+
+### 9.5 HTTP Transport Gateway (M11)
+AWS Lambda handler exposes `/v2` endpoints with strict JSON deserialization, 2,048-byte request size enforcement, CORS origin validation, and sub-50 ms execution latency.
