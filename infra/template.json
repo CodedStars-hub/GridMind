@@ -1,0 +1,131 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Description": "GridMind API v2: one shared Python engine behind an HTTP API; model data is bundled with the function.",
+  "Metadata": {
+    "AWSToolsMetrics": {"AWSAgentToolkit": "aws-cloudformation@3"},
+    "com.aws.cloudformation.Context": {
+      "ref": ["infra/README.md", "docs/api-contract.md"],
+      "must": ["Deploy only after explicit approval", "Do not introduce frontend, IoT or precomputation resources"]
+    }
+  },
+  "Parameters": {
+    "AllowedOriginsJson": {
+      "Type": "String",
+      "Default": "[]",
+      "Description": "JSON array of exact approved HTTP(S) browser origins; [] means same-origin only. Validated by the handler.",
+      "MaxLength": 4096
+    }
+  },
+  "Resources": {
+    "GridMindLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Metadata": {"com.aws.cloudformation.Context": {
+        "why": "Pre-create the function log group so execution needs no CreateLogGroup permission; retain diagnostics on removal.",
+        "must": ["Keep log name aligned with function name", "Review retained-log cleanup separately"]
+      }},
+      "Properties": {
+        "LogGroupName": {"Fn::Sub": "/aws/lambda/${AWS::StackName}-api"},
+        "RetentionInDays": 14
+      }
+    },
+    "GridMindRole": {
+      "Type": "AWS::IAM::Role",
+      "Metadata": {"com.aws.cloudformation.Context": {
+        "why": "Bundled config requires no runtime S3/IoT access; allow only this function's log streams.",
+        "must": ["Trust Lambda only", "Never grant wildcard service actions or all-resource access"]
+      }},
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]
+        },
+        "Policies": [{
+          "PolicyName": "WriteOwnLogStreams",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+              "Resource": {"Fn::GetAtt": ["GridMindLogs", "Arn"]}
+            }]
+          }
+        }]
+      }
+    },
+    "GridMindFunction": {
+      "Type": "AWS::Serverless::Function",
+      "DependsOn": "GridMindLogs",
+      "Metadata": {"com.aws.cloudformation.Context": {
+        "why": "Run the established synchronous engine from a reproducible zip; memory/timeout are provisional cloud settings.",
+        "must": ["Use the existing handler and Python 3.12", "Bundle every engine module and model JSON", "Stack name must be at most 60 characters"]
+      }},
+      "Properties": {
+        "FunctionName": {"Fn::Sub": "${AWS::StackName}-api"},
+        "Runtime": "python3.12",
+        "Architectures": ["x86_64"],
+        "Handler": "handler.lambda_handler",
+        "CodeUri": "../out/gridmind-api.zip",
+        "MemorySize": 2048,
+        "Timeout": 25,
+        "Role": {"Fn::GetAtt": ["GridMindRole", "Arn"]},
+        "Environment": {"Variables": {"GRIDMIND_ALLOWED_ORIGINS": {"Ref": "AllowedOriginsJson"}}}
+      }
+    },
+    "GridMindHttpApi": {
+      "Type": "AWS::Serverless::HttpApi",
+      "Metadata": {"com.aws.cloudformation.Context": {
+        "why": "Default route preserves handler-level aliases, OPTIONS and structured 404/405 responses; Lambda owns CORS.",
+        "must": ["Keep proxy payload 2.0", "Do not add conflicting gateway CORS", "Keep the public API scoped to this function"]
+      }},
+      "Properties": {
+        "Name": {"Fn::Sub": "${AWS::StackName}-http"},
+        "StageName": "$default",
+        "DefaultRouteSettings": {"ThrottlingRateLimit": 1, "ThrottlingBurstLimit": 2},
+        "DefinitionBody": {
+          "openapi": "3.0.1",
+          "info": {"title": "GridMind API v2", "version": "2"},
+          "paths": {
+            "/$default": {
+              "x-amazon-apigateway-any-method": {
+                "isDefaultRoute": true,
+                "responses": {"default": {"description": "Existing GridMind handler response"}},
+                "x-amazon-apigateway-integration": {
+                  "type": "aws_proxy",
+                  "httpMethod": "POST",
+                  "uri": {"Fn::GetAtt": ["GridMindFunction", "Arn"]},
+                  "payloadFormatVersion": "2.0",
+                  "timeoutInMillis": 29000
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GridMindInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Metadata": {"com.aws.cloudformation.Context": {
+        "why": "Permit only the selected account/API/default stage to invoke this function.",
+        "must": ["Keep both SourceAccount and API-scoped SourceArn"]
+      }},
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {"Ref": "GridMindFunction"},
+        "Principal": "apigateway.amazonaws.com",
+        "SourceAccount": {"Ref": "AWS::AccountId"},
+        "SourceArn": {"Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${GridMindHttpApi}/$default/*"}
+      }
+    }
+  },
+  "Outputs": {
+    "ApiBaseUrl": {
+      "Description": "Actual HTTPS base URL; populated only by an approved deployment.",
+      "Value": {"Fn::Sub": "https://${GridMindHttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"}
+    },
+    "FunctionName": {"Description": "Function used for smoke tests and log checks.", "Value": {"Ref": "GridMindFunction"}},
+    "LogGroupName": {"Description": "Retained function diagnostics.", "Value": {"Ref": "GridMindLogs"}}
+  }
+}
