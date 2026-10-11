@@ -28,7 +28,7 @@ Explain voltage exposure and indicative heater/motor rules, including their limi
 
 ## Hosting capacity
 
-Explain bounded block-wise capacity searches and the healthy-on-both-days criterion. Document in M6.
+M9 implements the configured discrete search and healthy-on-both-days criterion below. It does not calculate a continuous maximum or approve an interconnection.
 
 ## Placement and remedies
 
@@ -66,3 +66,17 @@ The illustrative monthly economic proxy values the fraction of reference insulat
 Strict voltage-limit comparisons count violating samples. Each sample spans step_minutes/60 hours, including the last sample; adjacent violating samples form one event and events never join across midnight. Potential connection-hours equal configured customers times violating hours. Monthly exposure weights the representative days, but customer counts are counted once if any day with nonzero monthly weight violates. Residential proxy totals include residential archetypes only; they are not a census of all neighbourhood households. Unknown counts propagate null rather than incomplete totals.
 
 Impact metrics intentionally use unrounded voltages; near thresholds they may differ from the legacy chart alerts, which use rounded voltages. The one-point feeder model omits household service drops and appliance susceptibility, so exposure cannot establish appliance damage. Neighbourhood equivalent aging totals have units of transformer-hours or transformer-years across separate assets. Percentages and voltage extrema are not summed. Definitions and all response fields are in API contract section 10; no HTTP deployment is part of M8.
+
+## M9 hosting search implementation
+
+`assess_hosting(config)` obtains a zero-proposed-EV baseline through `assess_network_with_precision`. For each transformer, `candidate_load_series` calls M7's profile builder with one virtual aggregate charging entry associated with that branch. The aggregate is not a site allocation: it avoids falsely restricting electrical headroom to existing candidate-site ceilings. Residential/commercial/mixed demand and evening/daytime EV shapes remain branch-specific. The shared `simulate_load_series_with_precision` performs all electrical, thermal and aging calculations; hosting modules contain no duplicate equations.
+
+At each grid candidate q, uncontrolled EV power is q times the normalized shape. Thus uncontrolled coincident peak is q. Managed power uses the same M7 clipping and overnight redistribution rule; the profile scale q, delivered peak and daily served kWh are returned separately. Managed feasibility retains the configured energy percentage on each day. The two representative days use summer weather but different configured demand profiles.
+
+`check_operating_series` takes extrema of unrounded voltage, loading and hot-spot series and reports margins. A lower-bound margin is observed minimum minus configured minimum; an upper-bound margin is configured maximum minus observed maximum. Any negative margin is a violation. There is no numerical safety epsilon or decision rounding. Hot-spot warning and critical diagnostics can both violate; the lower warning threshold determines healthy hosting. Top-oil and FAA are calculated by the engine, but no operational thresholds for them are configured.
+
+`grid_search` evaluates all positive multiples of allocation_block_kw through hosting_search_max_kw, after baseline evaluation. Exhaustive search tolerates non-monotonic feasibility; sampled monotonicity is not claimed as proof. It selects the highest evaluated feasible point and retains the next grid point's violations as limiting factors. At the upper bound, the true capacity may be greater. A compliant baseline with no feasible positive point selects zero; an already-violating baseline has no selected point and no positive search.
+
+For managed capacity, repeat that grid for each configured fraction. Select the largest feasible scaling level, then the highest sum of representative-day served energy, then the highest fraction. This follows the existing hosting contract, not the later placement/remedy ladder. No cost, battery, reallocation or equipment upgrade is considered. The configured evaluation budget must cover every possible candidate before any simulations start; each candidate represents two daily simulations, except baseline reused from M7. Baseline convergence failure propagates; candidate convergence failure is an explicit infeasible result and does not terminate the exhaustive grid.
+
+The response is opt-in and additive, defined in API contract section 11. M7/M8 consumers and golden outputs remain unchanged. Presentation rounds diagnostics only after feasibility and search; a negative margin close to zero may display as zero. Neighbourhood counts count each transformer once. Sum only independent uncontrolled kW, explicitly excluding any validation of shared upstream capacity or simultaneous network feasibility. The existing topology assigns identical equipment to all six branches; no unsupported per-equipment overrides are invented.
