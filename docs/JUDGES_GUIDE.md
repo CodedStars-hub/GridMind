@@ -1,4 +1,4 @@
-# GridMind — Hackathon Judge & Evaluator Guide
+﻿# GridMind - Hackathon Judge & Evaluator Guide
 
 **WeMakeDevs Environmental Hacks 2026** · **Track: Waste & Energy**  
 *Evaluating GridMind among 9,000+ Participants.*
@@ -15,7 +15,7 @@
 Across cities in India and developing nations, distribution utilities (DISCOMs) face a massive roadblock in clean energy adoption:
 - **The Core Problem**: 11 kV / 415 V distribution transformers (250 kVA) are overloaded when evening EV fast-charging surges right as solar PV generation drops to zero.
 - **The Dual Crisis**: Transformers experience statutory voltage collapse ($< 0.95\text{ p.u.}$) and rapid insulation thermal breakdown ($> 110^\circ\text{C} / 140^\circ\text{C}$), destroying millions in public assets.
-- **Current Utility Inefficiency**: Utility engineers either reject EV charging applications blindly (stalling clean energy) or demand expensive ₹5–7 Lakh transformer replacements (wasting metric tons of copper, steel, and oil).
+- **Current Utility Inefficiency**: Utility engineers either reject EV charging applications blindly (stalling clean energy) or demand expensive ₹5-7 Lakh transformer replacements (wasting metric tons of copper, steel, and oil).
 - **The GridMind Solution**: A browser-based digital twin that couples AC power-flow with IEEE C57.91 thermal physics, auto-sizes BESS, evaluates managed smart-charging, and emits OpenADR 2.0b dispatch instructions to AWS IoT Core edge controllers.
 
 ---
@@ -24,7 +24,7 @@ Across cities in India and developing nations, distribution utilities (DISCOMs) 
 
 | Hackathon Criterion | Weight | How GridMind Satisfies It | Verifiable Evidence |
 | :--- | :--- | :--- | :--- |
-| **Idea & Real-World Impact** | 30% | Targets physical waste of distribution assets and energy grid bottlenecks in developing nations. Unlocks rooftop solar & EV hosting capacity without ₹5–7L capital waste. | Detailed in [docs/ENVIRONMENTAL_IMPACT.md](ENVIRONMENTAL_IMPACT.md) and [PRD](../planning/product-requirement.md). |
+| **Idea & Real-World Impact** | 30% | Targets physical waste of distribution assets and energy grid bottlenecks in developing nations. Unlocks rooftop solar & EV hosting capacity without ₹5-7L capital waste. | Detailed in [docs/ENVIRONMENTAL_IMPACT.md](ENVIRONMENTAL_IMPACT.md) and [PRD](../planning/product-requirement.md). |
 | **Technical Rigor & Physics** | 25% | Standard-library Python engine solving exact radial AC power flow, IEEE C57.91 analytic exponential updates, and Arrhenius aging ($F_{\text{AA}}$). Zero hallucinations. | 100% reproducible tests in [engine/tests/](../engine/tests/); derivations in [docs/methodology.md](methodology.md). |
 | **AWS Cloud Architecture** | 25% | AWS SAM stack deployed in `ap-south-1` (Mumbai). HTTP API Gateway v2, Lambda (Python 3.12, <40 ms warm), S3 edge fallback, and AWS IoT Core MQTT dispatch. | Live endpoint at `/v2/health`; CloudFormation template in [infra/template.json](../infra/template.json). |
 | **Design, UX & Craft** | 20% | Executive engineering dashboard built with React 19, strict TypeScript, and Tailwind CSS v4. Interactive SVG network topology explorer and responsive charts. | Frontend code in [frontend/src/](../frontend/src/) and verified locally via `npm run dev`. |
@@ -52,7 +52,7 @@ If evaluating our recorded 3-minute video submission, here is the exact narrativ
   - Review the autonomous BESS sizing verdict (e.g., 30 kW / 60 kWh) and the transparent Capex comparison against a ₹5.5 Lakh transformer replacement.
 
 [2:00 - 2:30] Multi-Feeder Neighbourhood Explorer:
-  - Navigate to "Network Explorer" showing transformers T1–T6 across Model Colony.
+  - Navigate to "Network Explorer" showing transformers T1-T6 across Model Colony.
   - Demonstrate footfall-weighted candidate placement allocating charging capacity based on electrical headroom.
 
 [2:30 - 3:00] Edge Dispatch & AWS Architecture:

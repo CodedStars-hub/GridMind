@@ -1,4 +1,4 @@
-# GridMind Environmental Impact & Sustainability Assessment
+﻿# GridMind Environmental Impact & Sustainability Assessment
 
 **WeMakeDevs Environmental Hacks 2026** · **Track: Waste & Energy**  
 *Decoupling Clean Energy Acceleration from Physical Asset Waste.*
@@ -24,11 +24,11 @@ A typical 250 kVA, 11 kV/415 V oil-natural air-natural (ONAN) distribution trans
 
 | Material Component | Mass / Volume per 250 kVA Unit | Environmental Hazard & Embodied Carbon Impact |
 | :--- | :--- | :--- |
-| **High-Purity Copper Windings** | ~450 – 550 kg | Intensive mining footprint (~3.8 kg CO₂e per kg of primary copper); energy-intensive smelting. |
-| **Silicon Electrical Steel Core (CRGO)** | ~800 – 1,100 kg | Cold-rolled grain-oriented steel with high manufacturing energy intensity (~2.3 kg CO₂e per kg). |
-| **Mineral Insulating Oil** | ~450 – 600 Liters | Petroleum-derived hydrocarbon oil; severe hazardous waste risk if leaked into soil or municipal water tables. |
-| **Steel Tank & Radiator Fins** | ~350 – 450 kg | Heavy structural steel fabrication and protective painting coatings. |
-| **Cellulose Kraft Paper Insulation** | ~40 – 60 kg | Chemically treated dielectric paper immersed in mineral oil (non-recyclable hazardous disposal). |
+| **High-Purity Copper Windings** | ~450 - 550 kg | Intensive mining footprint (~3.8 kg CO₂e per kg of primary copper); energy-intensive smelting. |
+| **Silicon Electrical Steel Core (CRGO)** | ~800 - 1,100 kg | Cold-rolled grain-oriented steel with high manufacturing energy intensity (~2.3 kg CO₂e per kg). |
+| **Mineral Insulating Oil** | ~450 - 600 Liters | Petroleum-derived hydrocarbon oil; severe hazardous waste risk if leaked into soil or municipal water tables. |
+| **Steel Tank & Radiator Fins** | ~350 - 450 kg | Heavy structural steel fabrication and protective painting coatings. |
+| **Cellulose Kraft Paper Insulation** | ~40 - 60 kg | Chemically treated dielectric paper immersed in mineral oil (non-recyclable hazardous disposal). |
 
 ### The Waste Prevention Impact
 - **Lifespan Extension**: Under unmanaged 50 kW EV charging spikes, GridMind models that insulation life degrades at **$F_{\text{AA}} \approx 10.9\times$ to $17.2\times$ the normal rate**, burning through years of insulation life in months.
@@ -54,7 +54,7 @@ A typical 250 kVA, 11 kV/415 V oil-natural air-natural (ONAN) distribution trans
 ## 4. Economic Sustainability for Developing Economies
 
 In developing countries, public capital must be spent with extreme efficiency:
-- Upfront replacement of an urban distribution transformer costs **₹5,50,000 to ₹7,00,000 ($6,500 – $8,500 USD)**, including equipment procurement, civil foundation work, and street-level outage coordination.
+- Upfront replacement of an urban distribution transformer costs **₹5,50,000 to ₹7,00,000 ($6,500 - $8,500 USD)**, including equipment procurement, civil foundation work, and street-level outage coordination.
 - Procurement and replacement cycles in municipal utilities take **6 to 12 months**, during which clean energy interconnections are frozen.
 - **The GridMind ROI**: By identifying that a modest ₹1.8 Lakh managed storage buffer or zero-cost smart-charging schedule keeps the existing transformer completely safe, utilities save over **₹4,00,000 per installation** while accelerating green mobility today.
 

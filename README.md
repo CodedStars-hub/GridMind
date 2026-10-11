@@ -4,23 +4,25 @@
 
 <img src="./docs/assets/gridmind_wordmark_polished.svg" alt="GridMind Logo" width="460" />
 
-# GridMind — Digital Twin for Distribution Transformers
+# GridMind - Digital Twin for Distribution Transformers
 
 **Physics-Informed Edge Intelligence for Urban EV & Rooftop Solar Interconnection.**  
 *Decoupling Clean Energy Acceleration from Unchecked Grid Degradation.*
 
 <br />
 
-[![Hackathon: WeMakeDevs Environmental Hacks 2026](https://img.shields.io/badge/WeMakeDevs-Environmental%20Hacks%202026-00C49F.svg?style=for-the-badge&logo=hackerearth&logoColor=white)](https://wemakedevs.org)
-[![Track: Waste & Energy](https://img.shields.io/badge/Track-Waste%20%26%20Energy-10B981.svg?style=for-the-badge&logo=buffer&logoColor=white)](https://wemakedevs.org)
-[![Live API](https://img.shields.io/badge/AWS%20API%20Gateway-ap--south--1-FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health)
-[![Standard: IEEE C57.91](https://img.shields.io/badge/Standard-IEEE%20C57.91-4B5563.svg?style=for-the-badge&logo=ieee&logoColor=white)](https://standards.ieee.org)
-[![Protocol: OpenADR 2.0b](https://img.shields.io/badge/Protocol-OpenADR%202.0b-2563EB.svg?style=for-the-badge)](https://www.openadr.org)
+[![Hackathon: Environmental Hacks 2026](https://img.shields.io/badge/Hackathon-Environmental_Hacks_2026-00C49F.svg?style=for-the-badge)](https://wemakedevs.org)
+[![Track: Waste and Energy](https://img.shields.io/badge/Track-Waste_and_Energy-10B981.svg?style=for-the-badge)](https://wemakedevs.org)
+[![AWS Serverless](https://img.shields.io/badge/AWS-Serverless-FF9900.svg?style=for-the-badge&logo=amazonaws&logoColor=white)](https://0qe4v48i38.execute-api.ap-south-1.amazonaws.com/v2/health)
+[![AWS Lambda](https://img.shields.io/badge/AWS_Lambda-Python_3.12-FF9900.svg?style=for-the-badge&logo=awslambda&logoColor=white)](https://aws.amazon.com/lambda/)
+[![Standard: IEEE C57.91](https://img.shields.io/badge/Standard-IEEE_C57.91-4B5563.svg?style=for-the-badge)](https://standards.ieee.org)
+[![Protocol: OpenADR 2.0b](https://img.shields.io/badge/Protocol-OpenADR_2.0b-2563EB.svg?style=for-the-badge)](https://www.openadr.org)
 [![Python: 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![React 19](https://img.shields.io/badge/React-19.3-050505.svg?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
 [![Vite 8](https://img.shields.io/badge/Vite-8.3-646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![TypeScript 7](https://img.shields.io/badge/TypeScript-7.0-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.3-06B6D4.svg?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Pytest](https://img.shields.io/badge/Pytest-Verified-0A9EDC.svg?style=for-the-badge&logo=pytest&logoColor=white)](https://pytest.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-d4af37.svg?style=for-the-badge)](LICENSE)
 
 <br />
@@ -39,26 +41,26 @@
   <h2>Problem & Vision</h2>
 </div>
 
-Urban and peri-urban **11 kV / 415 V distribution transformers** (typically 100–630 kVA, nominal 250 kVA) form the backbone of the last-mile electrical grid. Across cities in India and developing nations, these critical assets were sized decades ago for simple, predictable residential load curves—**long before the arrival of high-power Electric Vehicle (EV) charging hubs and distributed rooftop Solar Photovoltaics (PV).**
+Urban and peri-urban **11 kV / 415 V distribution transformers** (typically 100-630 kVA, nominal 250 kVA) form the backbone of the last-mile electrical grid. Across cities in India and developing nations, these critical assets were sized decades ago for simple, predictable residential load curves-**long before the arrival of high-power Electric Vehicle (EV) charging hubs and distributed rooftop Solar Photovoltaics (PV).**
 
 Today, distribution utility (**DISCOM**) engineers face a crippling operational and decarbonization bottleneck:
 
 ### 1. The Duck Curve & Thermal Lag Trap
-Solar PV generation collapses to zero precisely when evening peak demand surges (18:00–22:00) as commuters plug in fleets of EVs simultaneously. In Indian summers, ambient temperatures already hover around **40°C–45°C**. The interaction between heavy baseline loading, high ambient heat, and concentrated charging spikes triggers severe dual constraints:
+Solar PV generation collapses to zero precisely when evening peak demand surges (18:00-22:00) as commuters plug in fleets of EVs simultaneously. In Indian summers, ambient temperatures already hover around **40°C-45°C**. The interaction between heavy baseline loading, high ambient heat, and concentrated charging spikes triggers severe dual constraints:
 - **Voltage Violations**: Voltage at the low-voltage (LV) feeder connection drops below statutory limits ($< 0.95\text{ p.u.}$).
 - **Exponential Thermal Aging**: Winding hot-spot temperatures ($\theta_H$) soar beyond the $110^\circ\text{C}$ normal rise and breach the $140^\circ\text{C}$ emergency threshold. Under IEEE C57.91, insulation life loss accelerates **exponentially** via Arrhenius kinetics.
 
 ### 2. The Planning Dilemma
 Utility planners currently have two equally flawed options:
 - **Blind Approvals**: Approve interconnections without time-resolved physics verification, risking premature transformer burnouts, catastrophic brownouts, and millions in unbudgeted asset failure.
-- **Blind Rejections / Capex Blockade**: Demand upfront substation and transformer upgrades (costing **₹5,00,000 to ₹7,00,000 per unit** with 6–9 months of procurement delays), completely stalling municipal clean energy and EV adoption.
+- **Blind Rejections / Capex Blockade**: Demand upfront substation and transformer upgrades (costing **₹5,00,000 to ₹7,00,000 per unit** with 6-9 months of procurement delays), completely stalling municipal clean energy and EV adoption.
 
 ### 3. The GridMind Breakthrough
 **GridMind** is a browser-based, physics-informed digital twin of a distribution transformer and multi-feeder neighbourhood. Within a single synchronous run, GridMind:
 1. **Couples AC Power Flow with IEEE C57.91 Thermal Dynamics** across 96 time-steps (15-minute intervals) over 24-hour cycles.
 2. **Determines Hosting Capacity Headroom** across diverse customer archetypes without empirical guesswork.
 3. **Optimizes Mitigation Strategies**: Automatically sizes Battery Energy Storage Systems (BESS) or evaluates dynamic smart-charging curtailment to clear electrical and thermal violations.
-4. **Calculates Honest Rupee Economics**: Quantifies insulation life depreciation against a ₹5–7 Lakh capital expenditure upgrade.
+4. **Calculates Honest Rupee Economics**: Quantifies insulation life depreciation against a ₹5-7 Lakh capital expenditure upgrade.
 5. **Emits Actionable Edge Telemetry**: Exports standardized **OpenADR 2.0b** demand-response signals published live to **AWS IoT Core** MQTT topics for edge-controller dispatch.
 
 ---
@@ -259,7 +261,7 @@ GridMind provides four cohesive application modules designed for distribution pl
 
 ### 3. Digital Twin Time-Series Assessment
 - **High-Resolution Multi-Series Telemetry**: 96-interval synchronized charts displaying:
-  - Voltage Profile with strict 0.95–1.05 p.u. statutory envelope lines.
+  - Voltage Profile with strict 0.95-1.05 p.u. statutory envelope lines.
   - Transformer Current Loading (%) against rated nameplate capacity.
   - IEEE C57.91 Winding Hot-Spot Temperature with 110°C warning and 140°C critical lines.
   - BESS State of Charge (SOC %) dynamics.
@@ -269,7 +271,7 @@ GridMind provides four cohesive application modules designed for distribution pl
 ### 4. Strategic Placement & BESS Sizing Planner
 - **Footfall-Ranked Greedy Placement**: Allocates charging capacity across candidate sites based on public demand density and electrical headroom.
 - **Remedy Ladder Analysis**: Evaluates unmanaged charging vs. managed smart-charging curtailment vs. battery energy storage.
-- **Capex vs. BESS Financial Comparison**: Transparent investment analysis balancing battery procurement against ₹5–7 Lakh transformer replacements.
+- **Capex vs. BESS Financial Comparison**: Transparent investment analysis balancing battery procurement against ₹5-7 Lakh transformer replacements.
 - **OpenADR 2.0b Dispatch Export**: Instant copy and transmission of structured demand response schedules to AWS IoT Core.
 
 ---
@@ -446,7 +448,7 @@ Authoritative engineering specifications, mathematical proofs, and deployment ru
 | ❓ [**Frequently Asked Questions (FAQ)**](docs/FAQ.md) | Engineering answers on Python standard library, avoiding black-box ML, and thermal stability |
 | 🧪 [**Verification Runbook**](docs/VERIFICATION_RUNBOOK.md) | End-to-end reproduction guide for local tests, Lambda invokers, frontend gates, and live AWS calls |
 | 📋 [**Product Requirements (PRD)**](planning/product-requirement.md) | Problem statement, user personas, core user journeys, and feature boundaries |
-| 🗺️ [**Implementation Plan**](planning/implementationplan.md) | Milestone roadmap (M1–M13) from physics foundations to network explorer |
+| 🗺️ [**Implementation Plan**](planning/implementationplan.md) | Milestone roadmap (M1-M13) from physics foundations to network explorer |
 | 💻 [**Frontend Architecture**](frontend/README.md) | React 19 setup, local Vite proxy configuration, and verification runbooks |
 | ☁️ [**AWS Infrastructure Guide**](infra/README.md) | AWS SAM template specifications, IAM least-privilege policies, and deployment steps |
 | 📂 [**Master Docs Index**](docs/README.md) | Categorized directory index of all documentation files |
@@ -460,7 +462,7 @@ Authoritative engineering specifications, mathematical proofs, and deployment ru
 GridMind directly addresses each core evaluation criterion of the **WeMakeDevs Environmental Hacks 2026** (Track: *Waste & Energy*):
 
 ### 1. Problem & Environmental Impact (30%)
-- **Targeting Real Waste**: Prematurely discarding distribution transformers wastes metric tons of copper, steel, and mineral oil while consuming ₹5–7 Lakhs in unnecessary public capital.
+- **Targeting Real Waste**: Prematurely discarding distribution transformers wastes metric tons of copper, steel, and mineral oil while consuming ₹5-7 Lakhs in unnecessary public capital.
 - **Unlocking Clean Energy**: By providing accurate, physics-backed hosting capacity and BESS sizing, GridMind enables DISCOMs to safely approve rooftop solar and EV fast chargers rather than stalling applications.
 
 ### 2. Technical Rigor & Physics Fidelity (25%)

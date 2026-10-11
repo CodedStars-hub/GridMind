@@ -1,4 +1,4 @@
-# GridMind Engineering Methodology
+﻿# GridMind Engineering Methodology
 
 Authoritative mathematical derivations, physical formulations, and algorithmic specifications governing the GridMind digital twin.
 
@@ -8,7 +8,7 @@ Authoritative mathematical derivations, physical formulations, and algorithmic s
 
 GridMind addresses the critical last-mile distribution planning challenge: **evaluating the operational and physical degradation impact of concentrated EV fast charging hubs and rooftop solar PV on urban 11 kV / 415 V distribution transformers.**
 
-Distribution transformers (typically 100–630 kVA, nominal 250 kVA) are the most expensive and vulnerable assets in the low-voltage network. When high-power EV charging coincides with evening peak load and high ambient temperatures, transformers experience simultaneous statutory voltage collapse ($< 0.95\text{ p.u.}$) and rapid thermal degradation.
+Distribution transformers (typically 100-630 kVA, nominal 250 kVA) are the most expensive and vulnerable assets in the low-voltage network. When high-power EV charging coincides with evening peak load and high ambient temperatures, transformers experience simultaneous statutory voltage collapse ($< 0.95\text{ p.u.}$) and rapid thermal degradation.
 
 GridMind replaces static spreadsheets and licensed black-box software with a **deterministic, standard-library Python physics engine** that:
 1. Solves radial AC power flow via exact fixed-point iteration.
@@ -63,7 +63,7 @@ $$I^{(k)} = \left( \frac{s_{\text{net}}}{V^{(k)}} \right)^*$$
 
 $$V^{(k+1)} = V_{\text{source}} - Z_{\text{series}} \cdot I^{(k)}$$
 
-The solver terminates when $|V^{(k+1)} - V^{(k)}| < 10^{-9}\text{ p.u.}$ (typically converges in 3–5 iterations). A numerical guard aborts if $|V| < 0.10\text{ p.u.}$ to prevent voltage collapse singularity.
+The solver terminates when $|V^{(k+1)} - V^{(k)}| < 10^{-9}\text{ p.u.}$ (typically converges in 3-5 iterations). A numerical guard aborts if $|V| < 0.10\text{ p.u.}$ to prevent voltage collapse singularity.
 
 ### 2.5 Current-Based Loading Definition
 At depressed operating voltages, constant apparent power draws higher current. GridMind measures loading as true secondary current magnitude:
@@ -191,10 +191,10 @@ When multiple candidate EV charging sites request grid interconnection, GridMind
 
 ---
 
-## 9. M7–M11 Production Transport & Multi-Asset Assessment
+## 9. M7-M11 Production Transport & Multi-Asset Assessment
 
 ### 9.1 Multi-Transformer Aggregation (M7)
-`assess_network(payload, config)` maps candidate sites to configured transformers (T1–T6), builds archetype load profiles (residential, commercial, mixed), and aggregates power flows without inventing synthetic network edges.
+`assess_network(payload, config)` maps candidate sites to configured transformers (T1-T6), builds archetype load profiles (residential, commercial, mixed), and aggregates power flows without inventing synthetic network edges.
 
 ### 9.2 Economic Valuation Engine (M8)
 `assess_impact(payload, config)` compares proposed charging allocations against a zero-EV baseline, providing unrounded high-precision series for depreciation and customer exposure hours.

@@ -1,4 +1,4 @@
-# GridMind Modeling Assumptions & Parameter Citations
+﻿# GridMind Modeling Assumptions & Parameter Citations
 
 Comprehensive documentation of all physical constants, nameplate ratings, economic parameters, standards citations, and boundary assumptions used across the GridMind digital twin.
 
@@ -49,7 +49,7 @@ Configured in [`config/transformer.json`](../config/transformer.json):
 | `feeder_resistance_pu` | 0.024 | p.u. | Approx. 100 m of 185 mm² 4-core aluminum XLPE cable |
 | `feeder_reactance_pu` | 0.010 | p.u. | Typical inductive reactance for bundled underground LV cable |
 | `powerflow_tolerance_pu` | 1e-9 | p.u. | Numerical fixed-point convergence tolerance |
-| `powerflow_max_iterations` | 50 | count | Numerical iteration ceiling (typically converges in 3–5 iterations) |
+| `powerflow_max_iterations` | 50 | count | Numerical iteration ceiling (typically converges in 3-5 iterations) |
 
 **Power Factor Standards**:
 - Base load: $\cos\phi = 0.95$ lagging (typical diversified residential/commercial power factor).
@@ -95,7 +95,7 @@ Configured in [`config/bess.json`](../config/bess.json):
 1. **Net-Zero Daily Energy Balance**: To ensure sustainable daily cyclical operation, the BESS simulation enforces $\text{SOC}_{\text{end}} = \text{SOC}_{\text{start}}$ across the 24-hour horizon.
 2. **Dispatch Algorithm**:
    - Discharges automatically during intervals where loading exceeds 100% or secondary voltage drops below $0.95\text{ p.u.}$
-   - Recharges during midday rooftop solar surplus (11:00–14:00) or midnight off-peak grid valleys (01:00–05:00).
+   - Recharges during midday rooftop solar surplus (11:00-14:00) or midnight off-peak grid valleys (01:00-05:00).
 3. **Bounded Sweep Optimization**: Evaluates all $(P_{\text{kW}}, E_{\text{kWh}})$ candidate pairs through the coupled multi-physics engine, selecting the minimal cost-effective pair that eliminates all voltage and thermal violations. If no pair succeeds, the engine recommends a transformer upgrade.
 
 ---

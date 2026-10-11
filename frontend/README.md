@@ -1,4 +1,4 @@
-# GridMind frontend — M12 foundation and M13 network explorer
+﻿# GridMind frontend - M12 foundation and M13 network explorer
 
 React + strict TypeScript + Vite + Tailwind. This workspace reads actual API configuration, shows backend health and runs supported single-transformer scenarios. It does not include the full interactive digital twin, maps, hosting UI, placement controls, batteries, dispatch, precomputation or telemetry. Backend planning endpoints exist; their interactive frontend is upcoming.
 
@@ -66,7 +66,7 @@ git diff --check
 - `src/app/`: shared layout, hash navigation, error boundary and health/network state. Hash links work on a static host without server-side routing rules. Route changes update the title and move keyboard focus to main content.
 - `src/pages/`: Overview, Network, Assessment, Planning and Not Found. Overview totals are **configured counts and nameplate ratings**, not measured demand, available headroom or live operating health. Customer connections include whatever counts the backend config defines; they are not automatically residential households.
 - `src/components/`: reusable panels, metrics, table and loading/error/empty states. The system-font stack avoids external font requests. Restrained teal/slate tokens, focus indicators, table captions and responsive navigation support clear engineering presentation.
-- `src/types/api.ts`: types for the four consumed operations derived from contract §§2–4 and 13. No unsupported endpoint or response fields. Neighborhood impact/hosting/planning types are deferred until their UI is implemented.
+- `src/types/api.ts`: types for the four consumed operations derived from contract §§2-4 and 13. No unsupported endpoint or response fields. Neighborhood impact/hosting/planning types are deferred until their UI is implemented.
 - `src/api/`: finite-value and shape checks at the untrusted response boundary, AbortController timeout/cancellation, structured server errors and no credentialed requests. The default request timeout is a transport setting, not a physics parameter. There are no automatic retries, caches or fabricated fallback results.
 - Simulation inputs and defaults come from `/v2/scenarios`. Display values come from successful `/v2/simulate` responses; the browser performs no physics. Errors clear prior results. While editing a completed scenario, the result remains explicitly labeled with the last submitted inputs.
 - `src/test/`: mocked transport and component/navigation tests. JSON fixtures were captured from the unchanged local backend (default simulation plus network/scenarios). They are **test-only** and are never imported by application pages or used as fallback data. Tests check failure states and cancellation as well as success.
