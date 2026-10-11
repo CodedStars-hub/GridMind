@@ -32,6 +32,37 @@ S3, CloudFront, IoT Core, Vite + React + TypeScript frontend.
 10. Never print, request, or store credentials or API keys.
 
 ## Finishing a milestone
-Run the checks listed in the prompt and paste the REAL output (not summaries) into a
-FINAL REPORT with these sections: "What was created", "Test and check results",
-"Decisions and ambiguities", "Anything not done". Then stop and wait.
+Run the checks listed in the prompt. For all future milestones, produce a concise,
+human-readable completion report with the main summary under approximately 200 words:
+
+### Milestone Summary — MXX: Milestone Name
+
+**Status:** Completed / Partially completed / Blocked
+
+**What was built**
+- 3–6 short bullets describing actual implemented functionality.
+- Mention important files or modules only when useful.
+
+**Technical decisions**
+- 2–4 bullets explaining important engineering decisions, assumptions or limitations.
+
+**Tests**
+- Tests: X passed, Y failed.
+- State whether required checks passed.
+- Include exact commands and REAL outputs in a collapsible details section if the
+  interface supports it; otherwise use a clearly separated verification appendix.
+
+**Git**
+- State the current branch.
+- List created commits, or state why commits were blocked.
+- If blocked, provide exact copy-paste staging and commit commands.
+
+**Next step**
+- State what the human must do next.
+- Mention the next milestone, but do not start it.
+
+Preserve these four FINAL REPORT sections: "What was created", "Test and check results",
+"Decisions and ambiguities", "Anything not done". The concise report may use these
+as its main headings, with a compact milestone summary at the top. Never omit REAL
+test output or required Git history, including `git log --oneline main..HEAD`;
+place verbose details in the verification appendix. Then stop and wait.
