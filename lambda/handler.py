@@ -9,14 +9,15 @@ import os
 from pathlib import Path
 import traceback
 
+import api_routes
+from api_http import MAX_BODY_BYTES, cors_headers, parse_body
+
 from gridmind_engine import __version__
 from gridmind_engine.powerflow import PowerFlowError
 from gridmind_engine.profiles import load_config_dir
 from gridmind_engine.simulate import run_simulation
 from gridmind_engine.validate import InvalidInputError, validate_request
 
-# Limit the decoded UTF-8 request body before JSON parsing.
-MAX_BODY_BYTES = 2048
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 _config_cache = None
@@ -32,7 +33,9 @@ def get_config():
     """Load config once; callers must treat the shared cached dictionary as read-only."""
     global _config_cache
     if _config_cache is None:
-        directory = os.environ.get('GRIDMIND_CONFIG_DIR', Path(__file__).resolve().parent.parent / 'config')
+        local = Path(__file__).resolve().parent / 'config'
+        default = local if local.is_dir() else Path(__file__).resolve().parent.parent / 'config'
+        directory = os.environ.get('GRIDMIND_CONFIG_DIR', default)
         _config_cache = load_config_dir(directory)
     return _config_cache
 
@@ -89,41 +92,35 @@ def _log(method, path, status, body, started, validated=None, exception_trace=No
     LOGGER.info(json.dumps(record, allow_nan=False))
 
 
-def _reject_constant(value):
-    """Reject non-standard JSON numeric tokens without echoing them."""
-    raise ValueError('non-finite JSON number')
-
-
-def handle_request(method, path, body_text, config):
+def handle_request(method, path, body_text, config, headers=None):
     """Return deterministic routing results without mutating config; log one request."""
     started = _clock_ms()
     validated = None
     exception_trace = None
     try:
         route = _path(path)
+        if route.startswith('/v2/'):
+            route = route.removeprefix('/v2')
+        cors_headers(headers)
         if route in ('/optimize', '/dispatch'):
             status, body = _error(404, 'not_found', 'route not available yet')
-        elif route not in ('/scenarios', '/simulate'):
+        elif route not in ('/scenarios', '/simulate', *api_routes.METHODS):
             status, body = _error(404, 'not_found', 'route not found')
-        elif (route == '/scenarios' and method != 'GET') or (route == '/simulate' and method != 'POST'):
+        elif method == 'OPTIONS':
+            status, body = 204, {}
+        elif method != ({'/scenarios': 'GET', '/simulate': 'POST'} | api_routes.METHODS)[route]:
             status, body = _error(405, 'method_not_allowed', 'method not allowed')
         elif route == '/scenarios':
             status, body = 200, build_scenarios_response(config)
+        elif method == 'GET':
+            status, body = 200, api_routes.invoke(route, None, config)
         else:
-            if not isinstance(body_text, str) or not body_text.strip():
-                raise InvalidInputError('body', 'request body is required')
-            try:
-                body_bytes = body_text.encode('utf-8')
-            except UnicodeError:
-                raise InvalidInputError('body', 'request body must be valid UTF-8') from None
-            if len(body_bytes) > MAX_BODY_BYTES:
-                raise InvalidInputError('body', 'request body is too large')
-            try:
-                payload = json.loads(body_text, parse_constant=_reject_constant)
-            except (ValueError, UnicodeError):
-                raise InvalidInputError('body', 'request body must be valid JSON') from None
-            validated = validate_request(payload, config['scenarios'])
-            status, body = 200, run_simulation(payload, config)
+            payload = parse_body(body_text)
+            if route == '/simulate':
+                validated = validate_request(payload, config['scenarios'])
+                status, body = 200, run_simulation(payload, config)
+            else:
+                status, body = 200, api_routes.invoke(route, payload, config)
         # Catch serialization failures before the single request log is emitted.
         json.dumps(body, allow_nan=False)
     except InvalidInputError as exc:
@@ -131,7 +128,8 @@ def handle_request(method, path, body_text, config):
     except NotImplementedError:
         status, body = _error(400, 'invalid_input', 'battery simulation is not available yet', 'bess')
     except PowerFlowError as exc:
-        status, body = _error(500, 'convergence_failed', str(exc))
+        message = 'power-flow solver did not converge' if _path(path).startswith('/v2/') else str(exc)
+        status, body = _error(500, 'convergence_failed', message)
     except Exception:
         exception_trace = traceback.format_exc()
         status, body = _error(500, 'internal_error', 'internal error')
@@ -139,20 +137,23 @@ def handle_request(method, path, body_text, config):
     return status, body
 
 
-def _response(status, body):
+def _response(status, body, headers=None):
     """Serialize the HTTP API proxy response with consistent JSON and cache headers."""
     return dict(statusCode=status,
-                headers={'Content-Type': 'application/json', 'Cache-Control': 'no-store'},
-                body=json.dumps(body, allow_nan=False))
+                headers={'Content-Type': 'application/json', 'Cache-Control': 'no-store', **(headers or {})},
+                body='' if status == 204 else json.dumps(body, allow_nan=False))
 
 
 def lambda_handler(event, context):
     """Decode an HTTP API event; each path emits exactly one structured log record."""
     started = _clock_ms()
     method = path = None
+    response_headers = {}
     try:
         if not isinstance(event, dict):
             raise InvalidInputError('event', 'event must be an HTTP API object')
+        if event.get('version', '2.0') != '2.0':
+            raise InvalidInputError('event', 'only HTTP API payload version 2.0 is supported')
         try:
             method = event['requestContext']['http']['method']
             path = event['rawPath']
@@ -161,10 +162,19 @@ def lambda_handler(event, context):
         if not isinstance(method, str) or not method or not isinstance(path, str) or not path:
             raise InvalidInputError('event', 'event must contain method and rawPath')
         body_text = event.get('body')
+        if type(event.get('isBase64Encoded', False)) is not bool:
+            raise InvalidInputError('event', 'isBase64Encoded must be boolean')
+        response_headers = cors_headers(event.get('headers'))
+        if method == 'OPTIONS':
+            response_headers.update({'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                                     'Access-Control-Allow-Headers': 'Content-Type'})
         if event.get('isBase64Encoded'):
             try:
                 if not isinstance(body_text, str):
                     raise ValueError('missing encoded body')
+                # Bound encoded input before allocating its decoded representation.
+                if len(body_text) > ((MAX_BODY_BYTES + 2) // 3) * 4:
+                    raise InvalidInputError('body', 'request body is too large')
                 body_text = base64.b64decode(body_text, validate=True).decode('utf-8')
             except (ValueError, UnicodeError, binascii.Error):
                 raise InvalidInputError('body', 'request body must be valid base64-encoded UTF-8') from None
@@ -172,10 +182,10 @@ def lambda_handler(event, context):
     except InvalidInputError as exc:
         status, body = _error(400, exc.code, exc.message, exc.field)
         _log(method, path, status, body, started)
-        return _response(status, body)
+        return _response(status, body, response_headers)
     except Exception:
         status, body = _error(500, 'internal_error', 'internal error')
         _log(method, path, status, body, started, exception_trace=traceback.format_exc())
-        return _response(status, body)
-    status, body = handle_request(method, path, body_text, config)
-    return _response(status, body)
+        return _response(status, body, response_headers)
+    status, body = handle_request(method, path, body_text, config, event.get('headers'))
+    return _response(status, body, response_headers)
