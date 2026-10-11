@@ -31,7 +31,7 @@ pytest engine/tests
 
 No installation of the engine is needed: `pytest.ini` puts `engine/` on the Python path.
 
-Current status: M0 to M4 complete
+Current status: M0 to M5 complete
 
 Engine code must stay compatible with Python 3.12. Do not use syntax or standard-library features newer than 3.12.
 
